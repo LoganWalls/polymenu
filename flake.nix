@@ -21,14 +21,21 @@
         pkgs = import nixpkgs { inherit system; };
         inherit (pkgs) lib stdenv;
         fenixPkgs = fenix.packages.${system};
-        toolchain = with fenixPkgs;
+        baseToolchain = fenixPkgs.complete;
+        toolchain = with baseToolchain;
+          with fenixPkgs;
           combine [
-            complete.rustc
-            complete.cargo
-            complete.rust-src
-            complete.rustfmt
+            rustc
+            cargo
+            rust-src
+            rustfmt
+            clippy
             targets.wasm32-unknown-unknown.latest.rust-std
           ];
+        rustPlatform = pkgs.makeRustPlatform {
+          rustc = toolchain;
+          cargo = toolchain;
+        };
       in
       {
         devShell = pkgs.mkShell {
@@ -36,9 +43,12 @@
             [
               cargo-tauri
               trunk
-              # esbuild
               fenixPkgs.rust-analyzer
             ]
+            ++ lib.optionals stdenv.isLinux (with pkgs; [
+              pkg-config
+              webkitgtk
+            ])
             ++ lib.optionals stdenv.isDarwin (with pkgs.darwin.apple_sdk.frameworks; [
               wasm-bindgen-cli
               AppKit

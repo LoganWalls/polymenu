@@ -16,6 +16,9 @@
       "shell": {
         "all": false,
         "open": true
+      },
+      "window": {
+        "setSize": true
       }
     },
     "bundle": {
@@ -36,10 +39,13 @@
     "updater": {
       "active": false
     },
+    "macOSPrivateApi": true,
     "windows": [
       {
         "fullscreen": false,
         "resizable": true,
+        "decorations": true,
+        "transparent": true,
         "title": "polymenu",
         "width": 800,
         "height": 600

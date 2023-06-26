@@ -8,7 +8,6 @@
   font-weight: 400;
 
   color: #0f0f0f;
-  background-color: #f6f6f6;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -17,13 +16,20 @@
   -webkit-text-size-adjust: 100%;
 }
 
+body {
+  background: transparent;
+  height: fit-content;
+  width: fit-content;
+}
+
 .container {
   margin: 0;
-  padding-top: 10vh;
+  padding: 1em;
   display: flex;
   flex-direction: column;
   justify-content: center;
   text-align: center;
+  border-radius: 0.6em;
 }
 
 .logo {
@@ -94,6 +100,9 @@ button {
 @media (prefers-color-scheme: dark) {
   :root {
     color: #f6f6f6;
+  }
+
+  .container {
     background-color: #2f2f2f;
   }
 
