@@ -1,3 +1,5 @@
+use leptos::html::body;
+use leptos::leptos_dom::console_log;
 use leptos::leptos_dom::ev::SubmitEvent;
 use leptos::*;
 use serde::{Deserialize, Serialize};
@@ -8,16 +10,16 @@ use wasm_bindgen::prelude::*;
 extern "C" {
     #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
     async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "window"])]
-    async fn setSize(size: LogicalSize);
+    #[wasm_bindgen(js_name = setSize, js_namespace = ["window", "__TAURI__", "window", "appWindow"])]
+    async fn set_size(size: LogicalSize);
 }
 
-#[wasm_bindgen]
+#[wasm_bindgen(js_namespace = ["window", "__TAURI__", "window"])]
 extern "C" {
     type LogicalSize;
 
     #[wasm_bindgen(constructor)]
-    fn new(width: u32, height: u32) -> LogicalSize;
+    fn new(width: i32, height: i32) -> LogicalSize;
 }
 
 #[derive(Serialize, Deserialize)]
@@ -25,14 +27,38 @@ struct GreetArgs<'a> {
     name: &'a str,
 }
 
+#[derive(Serialize, Deserialize, Clone)]
+struct Item<'a> {
+    key: &'a str,
+}
+
+fn fit_window_to_content() {
+    let body = document().body().expect("Could not get body");
+    let width = body.client_width().max(200);
+    let height = body.client_height().max(200);
+    spawn_local(async move {
+        set_size(LogicalSize::new(width, height)).await;
+    });
+}
+
 #[component]
 pub fn App(cx: Scope) -> impl IntoView {
-    let (query, set_query) = create_signal(cx, String::new());
-    // let (greet_msg, set_greet_msg) = create_signal(cx, String::new());
+    let all_items: Vec<Item> = ["foo", "bar", "baz"]
+        .into_iter()
+        .map(|key| Item { key })
+        .collect();
+    let (visible_items, set_visible_items) = create_signal(cx, all_items.clone());
 
-    let update_query = move |ev| {
-        let v = event_target_value(&ev);
-        set_query.set(v);
+    let update_items = move |ev| {
+        let new_query = event_target_value(&ev);
+        set_visible_items.set(
+            all_items
+                .iter()
+                .filter(|i| i.key.contains(&new_query))
+                .cloned()
+                .collect(),
+        );
+        fit_window_to_content();
     };
 
     // let greet = move |ev: SubmitEvent| {
@@ -51,41 +77,20 @@ pub fn App(cx: Scope) -> impl IntoView {
 
     view! { cx,
         <main class="container">
-            <input id="query" on:input=update_query />
+            <input id="query" on:input=update_items />
             <div id="results">
-                {move || query.get()}
+                 <For
+                    each=visible_items
+                    key=|item| item.key
+                    // renders each item to a view
+                    view=move |cx, item: Item| {
+                      view! {
+                        cx,
+                        <button>{item.key}</button>
+                      }
+                    }
+                  />
             </div>
         </main>
     }
 }
-
-// <div class="row">
-//     <a href="https://tauri.app" target="_blank">
-//         <img src="public/tauri.svg" class="logo tauri" alt="Tauri logo"/>
-//     </a>
-//     <a href="https://docs.rs/leptos/" target="_blank">
-//         <img src="public/leptos.svg" class="logo leptos" alt="Leptos logo"/>
-//     </a>
-// </div>
-//
-// <p>"Click on the Tauri and Leptos logos to learn more."</p>
-//
-// <p>
-//     "Recommended IDE setup: "
-//     <a href="https://code.visualstudio.com/" target="_blank">"VS Code"</a>
-//     " + "
-//     <a href="https://github.com/tauri-apps/tauri-vscode" target="_blank">"Tauri"</a>
-//     " + "
-//     <a href="https://github.com/rust-lang/rust-analyzer" target="_blank">"rust-analyzer"</a>
-// </p>
-//
-// <form class="row" on:submit=greet>
-//     <input
-//         id="greet-input"
-//         placeholder="Enter a name..."
-//         on:input=update_name
-//     />
-//     <button type="submit">"Greet"</button>
-// </form>
-//
-// <p><b>{ move || greet_msg.get() }</b></p>

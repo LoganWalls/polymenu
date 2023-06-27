@@ -43,8 +43,9 @@
     "windows": [
       {
         "fullscreen": false,
+        "alwaysOnTop": false,
         "resizable": true,
-        "decorations": true,
+        "decorations": false,
         "transparent": true,
         "title": "polymenu",
         "width": 800,
