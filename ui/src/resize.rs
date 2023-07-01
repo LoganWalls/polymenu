@@ -1,5 +1,5 @@
-use leptos::{document, spawn_local};
-use wasm_bindgen::prelude::wasm_bindgen;
+use leptos::*;
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "window"])]
 extern "C" {

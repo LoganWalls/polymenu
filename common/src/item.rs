@@ -1,19 +1,30 @@
+use serde::{Deserialize, Serialize};
 use std::cmp::{Ord, Ordering};
+use std::{error::Error, io};
 
-#[derive(Debug, Clone, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
-pub struct Item<'a> {
-    pub id: u16,
-    pub key: &'a str,
-    pub score: Option<u32>,
-    pub match_indices: Option<Vec<usize>>,
-    pub selected: bool,
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct ItemData {
+    pub key: String,
 }
 
-impl<'a> Item<'a> {
-    pub fn new(id: u16, key: &'a str) -> Item<'a> {
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct Item {
+    pub id: u16,
+    pub data: ItemData,
+
+    #[serde(default)]
+    pub selected: bool,
+    #[serde(skip)]
+    pub score: Option<u32>,
+    #[serde(skip)]
+    pub match_indices: Option<Vec<usize>>,
+}
+
+impl Item {
+    pub fn new(id: u16, data: ItemData) -> Self {
         Self {
             id,
-            key,
+            data,
             score: None,
             match_indices: None,
             selected: false,
@@ -21,7 +32,7 @@ impl<'a> Item<'a> {
     }
 }
 
-impl Ord for Item<'_> {
+impl Ord for Item {
     fn cmp(&self, other: &Self) -> Ordering {
         match (self.score, other.score) {
             // Sort by score
@@ -35,20 +46,19 @@ impl Ord for Item<'_> {
     }
 }
 
-impl PartialOrd for Item<'_> {
+impl PartialOrd for Item {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-// use std::{error::Error, io};
-// pub fn parse_items(source: impl io::Read) -> Result<Vec<Item>, Box<dyn Error>> {
-//     let mut rdr = csv::ReaderBuilder::new()
-//         .has_headers(false)
-//         .from_reader(source);
-//     let mut result = Vec::new();
-//     for (i, data) in rdr.deserialize::<ItemData>().enumerate() {
-//         result.push(Item::new(i, data?));
-//     }
-//     Ok(result)
-// }
+pub fn parse_items(source: impl io::Read) -> Result<Vec<Item>, Box<dyn Error>> {
+    let mut rdr = csv::ReaderBuilder::new()
+        .has_headers(false)
+        .from_reader(source);
+    let mut result = Vec::new();
+    for (i, data) in rdr.deserialize::<ItemData>().enumerate() {
+        result.push(Item::new(i as u16, data?));
+    }
+    Ok(result)
+}

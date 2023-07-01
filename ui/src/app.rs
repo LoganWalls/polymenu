@@ -1,10 +1,7 @@
-use leptos::html::body;
-use leptos::leptos_dom::console_log;
-use leptos::leptos_dom::ev::SubmitEvent;
 use leptos::*;
 use polymenu_common::item::Item;
 use serde::{Deserialize, Serialize};
-use serde_wasm_bindgen::to_value;
+use serde_wasm_bindgen::{from_value, to_value};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -14,57 +11,49 @@ extern "C" {
 }
 
 #[derive(Serialize, Deserialize)]
-struct GreetArgs<'a> {
-    name: &'a str,
+struct FetchItemsArgs<'a> {
+    query: &'a str,
+}
+
+async fn fetch_items(query: &str) -> Vec<Item> {
+    let args = to_value(&FetchItemsArgs { query }).unwrap();
+    from_value::<Vec<Item>>(invoke("fetch_items", args).await).unwrap()
 }
 
 #[component]
 pub fn App(cx: Scope) -> impl IntoView {
-    let all_items: Vec<Item> = ["foo", "bar", "baz"]
-        .into_iter()
-        .enumerate()
-        .map(|(i, key)| Item::new(i as u16, key))
-        .collect();
-    let (visible_items, set_visible_items) = create_signal(cx, all_items.clone());
+    let (query, set_query) = create_signal(cx, "".to_string());
+    let all_items = create_resource(cx, || "", fetch_items);
+    let (visible_items, set_visible_items) = create_signal::<Vec<Item>>(cx, Vec::new());
 
-    let update_items = move |ev| {
-        let new_query = event_target_value(&ev);
+    let update_query = move |ev| {
+        set_query(event_target_value(&ev));
+    };
+
+    create_effect(cx, move |_| {
         set_visible_items.set(
             all_items
-                .iter()
-                .filter(|i| i.key.contains(&new_query))
-                .cloned()
+                .read(cx)
+                .unwrap_or_default()
+                .into_iter()
+                .filter(|i| i.data.key.contains(&query()))
                 .collect(),
         );
         crate::resize::fit_window_to_content();
-    };
-
-    // let greet = move |ev: SubmitEvent| {
-    //     ev.prevent_default();
-    //     spawn_local(async move {
-    //         if name.get().is_empty() {
-    //             return;
-    //         }
-    //
-    //         let args = to_value(&GreetArgs { name: &name.get() }).unwrap();
-    //         // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-    //         let new_msg = invoke("greet", args).await.as_string().unwrap();
-    //         set_greet_msg.set(new_msg);
-    //     });
-    // };
+    });
 
     view! { cx,
         <main class="container" on:load=|_: ev::Event| crate::resize::fit_window_to_content()>
-            <input id="query" on:input=update_items />
+            <input id="query" on:input=update_query />
             <div id="results">
                  <For
                     each=visible_items
-                    key=|item| item.key
+                    key=|item| item.id
                     // renders each item to a view
                     view=move |cx, item: Item| {
                       view! {
                         cx,
-                        <button>{item.key}</button>
+                        <button>{item.data.key}</button>
                       }
                     }
                   />
