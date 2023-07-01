@@ -1,4 +1,5 @@
 mod app;
+mod resize;
 
 use app::*;
 use leptos::*;

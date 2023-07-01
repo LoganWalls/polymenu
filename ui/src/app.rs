@@ -10,16 +10,6 @@ use wasm_bindgen::prelude::*;
 extern "C" {
     #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
     async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-    #[wasm_bindgen(js_name = setSize, js_namespace = ["window", "__TAURI__", "window", "appWindow"])]
-    async fn set_size(size: LogicalSize);
-}
-
-#[wasm_bindgen(js_namespace = ["window", "__TAURI__", "window"])]
-extern "C" {
-    type LogicalSize;
-
-    #[wasm_bindgen(constructor)]
-    fn new(width: i32, height: i32) -> LogicalSize;
 }
 
 #[derive(Serialize, Deserialize)]
@@ -32,14 +22,6 @@ struct Item<'a> {
     key: &'a str,
 }
 
-fn fit_window_to_content() {
-    let body = document().body().expect("Could not get body");
-    let width = body.client_width().max(200);
-    let height = body.client_height().max(200);
-    spawn_local(async move {
-        set_size(LogicalSize::new(width, height)).await;
-    });
-}
 
 #[component]
 pub fn App(cx: Scope) -> impl IntoView {
@@ -58,7 +40,7 @@ pub fn App(cx: Scope) -> impl IntoView {
                 .cloned()
                 .collect(),
         );
-        fit_window_to_content();
+        crate::resize::fit_window_to_content();
     };
 
     // let greet = move |ev: SubmitEvent| {
@@ -76,7 +58,7 @@ pub fn App(cx: Scope) -> impl IntoView {
     // };
 
     view! { cx,
-        <main class="container">
+        <main class="container" on:load=|_: ev::Event| crate::resize::fit_window_to_content()>
             <input id="query" on:input=update_items />
             <div id="results">
                  <For
