@@ -2,6 +2,7 @@ use leptos::html::body;
 use leptos::leptos_dom::console_log;
 use leptos::leptos_dom::ev::SubmitEvent;
 use leptos::*;
+use polymenu_common::item::Item;
 use serde::{Deserialize, Serialize};
 use serde_wasm_bindgen::to_value;
 use wasm_bindgen::prelude::*;
@@ -17,17 +18,12 @@ struct GreetArgs<'a> {
     name: &'a str,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
-struct Item<'a> {
-    key: &'a str,
-}
-
-
 #[component]
 pub fn App(cx: Scope) -> impl IntoView {
     let all_items: Vec<Item> = ["foo", "bar", "baz"]
         .into_iter()
-        .map(|key| Item { key })
+        .enumerate()
+        .map(|(i, key)| Item::new(i as u16, key))
         .collect();
     let (visible_items, set_visible_items) = create_signal(cx, all_items.clone());
 
