@@ -1,6 +1,8 @@
+use clap::{Parser, ValueEnum, ValueHint};
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, ValueEnum)]
 pub enum CaseSensitivity {
     /// Case-insensitive only when query is entirely lowercase
     Smart,
@@ -10,16 +12,43 @@ pub enum CaseSensitivity {
     Ignore,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Parser, Serialize, Deserialize, Clone, Debug)]
+#[command(author, version, about, long_about = None)]
 pub struct Config {
-    /// Prompt to be displayed as a placeholder in the text input box
+    /// Read a theme from a file
+    #[arg(short, long, value_name = "FILE", value_hint = ValueHint::FilePath)]
+    #[serde(skip)]
+    pub config: Option<PathBuf>,
+
+    /// The prompt to be displayed
+    #[arg(short, long, default_value_t = String::from(""))]
     pub prompt: String,
-    /// Initial value for the text input box
+
+    /// An initial value for the query
+    #[arg(short, long, default_value_t = String::from(""))]
     pub query: String,
+
     /// How to treat case-sensitivity
+    #[arg(long, value_enum, default_value_t = CaseSensitivity::Smart)]
     pub case: CaseSensitivity,
-    /// Maximum number of items that can be selected
+
+    /// The maximum number of items that can be selected
+    #[arg(short, long, default_value_t = 1)]
     pub max: usize,
-    /// Maximum number of items that can be displayed at once
+
+    /// The maximum number of items that can be displayed at once
+    #[arg(long, default_value_t = 10)]
     pub max_visible: usize,
+
+    /// Read items from a file instead of stdin
+    #[arg(short, long, value_name = "FILE", value_hint = ValueHint::FilePath)]
+    #[serde(default)]
+    pub file: Option<PathBuf>,
+
+    /// Execute an external command to populate items whenever the query is changed
+    /// String args with the value $QUERY will be set to the current query before
+    /// each execution.
+    #[arg(last = true, value_name = "COMMAND", verbatim_doc_comment, num_args = 1..)]
+    #[serde(default)]
+    pub callback: Option<Vec<String>>,
 }

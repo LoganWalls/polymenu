@@ -2647,7 +2647,6 @@ dependencies = [
 name = "polymenu"
 version = "0.0.0"
 dependencies = [
- "clap",
  "polymenu-common",
  "serde",
  "serde_json",
@@ -2659,6 +2658,7 @@ dependencies = [
 name = "polymenu-common"
 version = "0.1.0"
 dependencies = [
+ "clap",
  "csv",
  "serde",
 ]

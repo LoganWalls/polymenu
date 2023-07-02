@@ -11,7 +11,7 @@ pub enum ItemSource {
 }
 
 impl ItemSource {
-    pub fn new(cli_args: &crate::CliArgs) -> Self {
+    pub fn new(cli_args: &polymenu_common::Config) -> Self {
         match (&cli_args.file, &cli_args.callback) {
             (None, None) => Self::StdIn,
             (Some(path), _) => Self::File(path.to_path_buf()),

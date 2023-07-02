@@ -16,8 +16,8 @@ extern "C" {
 
 pub fn fit_window_to_content() {
     let body = document().body().expect("Could not get body");
-    let width = body.client_width().max(200);
-    let height = body.client_height().max(200);
+    let width = body.client_width().max(10);
+    let height = body.client_height().max(10);
     spawn_local(async move {
         set_size(LogicalSize::new(width, height)).await;
     });
