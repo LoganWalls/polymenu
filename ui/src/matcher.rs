@@ -3,7 +3,7 @@ use fuzzy_matcher::FuzzyMatcher;
 use polymenu_common::item::Item;
 use polymenu_common::CaseSensitivity;
 
-pub fn new_matcher(case: &CaseSensitivity) -> SkimMatcherV2 {
+pub fn new_matcher(case: CaseSensitivity) -> SkimMatcherV2 {
     let matcher = SkimMatcherV2::default();
     match case {
         CaseSensitivity::Smart => matcher.smart_case(),
