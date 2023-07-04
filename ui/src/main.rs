@@ -1,4 +1,6 @@
 mod app;
+mod keybinds;
+mod matcher;
 mod resize;
 
 use app::invoke_no_args;

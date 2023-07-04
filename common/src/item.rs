@@ -9,9 +9,8 @@ pub struct ItemData {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Item {
-    pub id: u16,
+    pub id: usize,
     pub data: ItemData,
-
     #[serde(default)]
     pub selected: bool,
     #[serde(skip)]
@@ -21,7 +20,7 @@ pub struct Item {
 }
 
 impl Item {
-    pub fn new(id: u16, data: ItemData) -> Self {
+    pub fn new(id: usize, data: ItemData) -> Self {
         Self {
             id,
             data,
@@ -58,7 +57,7 @@ pub fn parse_items(source: impl io::Read) -> Result<Vec<Item>, Box<dyn Error>> {
         .from_reader(source);
     let mut result = Vec::new();
     for (i, data) in rdr.deserialize::<ItemData>().enumerate() {
-        result.push(Item::new(i as u16, data?));
+        result.push(Item::new(i, data?));
     }
     Ok(result)
 }
