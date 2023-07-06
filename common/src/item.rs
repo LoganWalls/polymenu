@@ -39,8 +39,8 @@ impl Ord for Item {
             // Items with a score should be above those without
             (Some(_), _) => Ordering::Greater,
             (None, Some(_)) => Ordering::Less,
-            // Fallback to the current order of the items
-            _ => Ordering::Equal,
+            // Fallback to the original order of the items
+            _ => other.id.cmp(&self.id),
         }
     }
 }

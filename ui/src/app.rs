@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use leptos::leptos_dom::console_log;
 use leptos::*;
 use polymenu_common::item::Item;
@@ -9,6 +7,7 @@ use serde_wasm_bindgen::{from_value, to_value};
 use wasm_bindgen::prelude::*;
 
 use crate::keybinds::{register_keybinds, Action};
+use crate::resize::fit_window_to_content;
 
 #[wasm_bindgen]
 extern "C" {
@@ -16,8 +15,8 @@ extern "C" {
     async fn invoke(cmd: &str, args: JsValue) -> JsValue;
     #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"], js_name = "invoke")]
     pub async fn invoke_no_args(cmd: &str) -> JsValue;
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "process"])]
-    async fn close();
+    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "process"], js_name = "exit")]
+    async fn close(exitCode: usize);
 }
 
 #[derive(Serialize, Deserialize)]
@@ -32,7 +31,7 @@ async fn fetch_items(query: String) -> Vec<Item> {
 
 #[component]
 pub fn App(cx: Scope, config: Config) -> impl IntoView {
-    let matcher = crate::matcher::new_matcher(&config.case);
+    let using_callback = config.callback.is_some();
     let (query, set_query) = create_signal(cx, config.query);
     let (cursor_position, set_cursor_position) = create_signal::<usize>(cx, 0);
     let all_items = if config.callback.is_some() {
@@ -44,16 +43,30 @@ pub fn App(cx: Scope, config: Config) -> impl IntoView {
     let (selected_items, set_selected_items) = create_signal::<Vec<Item>>(cx, Vec::new());
     let visible_items = move || {
         let mut items = all_items.read(cx).unwrap_or_default();
-        if config.callback.is_none() {
-            crate::matcher::update_scores(&query(), &matcher, &mut items);
+        if !using_callback {
+            if query().is_empty() {
+                items.iter_mut().for_each(|item| {
+                    item.score = None;
+                    item.match_indices = None;
+                });
+            } else {
+                let matcher = crate::matcher::new_matcher(config.case);
+                crate::matcher::update_scores(&query(), &matcher, &mut items);
+                items.retain(|item| item.score.is_some());
+            }
+            // Reverse sort so that items with higher score are on top.
+            items.sort_by(|a, b| b.cmp(a));
         }
         let n_items = items.len().min(config.max_visible);
-        items
+        items = items
             .into_iter()
             .take(n_items.saturating_sub(selected_items().len()))
             .chain(selected_items())
             .take(config.max_visible)
-            .collect::<Vec<Item>>()
+            .collect::<Vec<Item>>();
+        // Resize the window to fit the content whenever the visible items change.
+        fit_window_to_content();
+        items
     };
 
     let select_item = move |id: usize| {
@@ -118,43 +131,38 @@ pub fn App(cx: Scope, config: Config) -> impl IntoView {
                 .collect::<Vec<&str>>()
                 .join("\n"),
         ),
-        Action::Close => spawn_local(close()),
+        Action::Close => spawn_local(close(1)),
     };
-
-    register_keybinds(execute_action);
-
-    // Resize the window to fit the content whenever the query changes.
     create_effect(cx, move |_| {
-        query();
-        request_animation_frame(|| {
-            // `request_animation_frame` by itself sometimes calls the
-            // resize function at the wrong time, so `set_timeout` is needed.
-            set_timeout(
-                crate::resize::fit_window_to_content,
-                Duration::from_millis(1),
-            )
-        });
+        log!("----Start----");
+        visible_items().iter().for_each(|item| log!("{:?}", item));
+        log!("----End----");
     });
-
-    let update_query = move |ev| {
-        set_query(event_target_value(&ev));
+    register_keybinds(execute_action);
+    let rendered_items = move || {
+        visible_items()
+            .into_iter()
+            .enumerate()
+            .map(|(i, item)| {
+                view! { cx,
+                    <button
+                        class=("under-cursor", move|| i == cursor_position())
+                        class:selected=move|| item.selected
+                    >
+                        {item.data.key}
+                    </button>
+                }
+            })
+            .collect_view(cx)
     };
     view! { cx,
-        <main class="container" on:load=|_: ev::Event| crate::resize::fit_window_to_content()>
-            <input id="query" on:input=update_query />
-            <div id="results">
-                 <For
-                    each=visible_items
-                    key=move |item| item.data.key.clone()
-                    // renders each item to a view
-                    view=move |cx, item: Item| {
-                      view! {
-                        cx,
-                        <button>{item.data.key}</button>
-                      }
-                    }
-                  />
-            </div>
+        <main class="container">
+            <input
+                id="query"
+                on:input=move |ev| set_query(event_target_value(&ev))
+                autocomplete="off"
+            />
+            <div id="results">{rendered_items}</div>
         </main>
     }
 }
