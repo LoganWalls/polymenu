@@ -133,11 +133,6 @@ pub fn App(cx: Scope, config: Config) -> impl IntoView {
         ),
         Action::Close => spawn_local(close(1)),
     };
-    create_effect(cx, move |_| {
-        log!("----Start----");
-        visible_items().iter().for_each(|item| log!("{:?}", item));
-        log!("----End----");
-    });
     register_keybinds(execute_action);
     let rendered_items = move || {
         visible_items()
