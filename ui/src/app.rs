@@ -1,3 +1,4 @@
+use leptos::html::Input;
 use leptos::leptos_dom::console_log;
 use leptos::*;
 use polymenu_common::item::Item;
@@ -39,7 +40,6 @@ pub fn App(cx: Scope, config: Config) -> impl IntoView {
     } else {
         create_resource(cx, || "".to_string(), fetch_items)
     };
-
     let (selected_items, set_selected_items) = create_signal::<Vec<Item>>(cx, Vec::new());
     let visible_items = move || {
         let mut items = all_items.read(cx).unwrap_or_default();
@@ -133,6 +133,15 @@ pub fn App(cx: Scope, config: Config) -> impl IntoView {
         ),
         Action::Close => spawn_local(close(1)),
     };
+
+    let query_input_ref = create_node_ref::<Input>(cx);
+    let focus_query = move |_| {
+        if let Some(q) = query_input_ref.get() {
+            request_animation_frame(move || {
+                let _ = q.focus();
+            });
+        }
+    };
     register_keybinds(execute_action);
     let rendered_items = move || {
         visible_items()
@@ -151,11 +160,13 @@ pub fn App(cx: Scope, config: Config) -> impl IntoView {
             .collect_view(cx)
     };
     view! { cx,
-        <main class="container">
+        <main on:load=focus_query class="container">
             <input
+                node_ref=query_input_ref
                 id="query"
                 on:input=move |ev| set_query(event_target_value(&ev))
                 autocomplete="off"
+                autofocus
             />
             <div id="results">{rendered_items}</div>
         </main>
