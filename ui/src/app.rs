@@ -64,7 +64,7 @@ pub fn App(cx: Scope, config: Config) -> impl IntoView {
             .chain(selected_items())
             .take(config.max_visible)
             .collect::<Vec<Item>>();
-        // Resize the window to fit the content whenever the visible items change.
+        set_cursor_position(0);
         fit_window_to_content();
         items
     };
