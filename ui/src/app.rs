@@ -79,12 +79,25 @@ pub fn App(cx: Scope, config: Config) -> impl IntoView {
             })
             .expect("Tried to select before items are available");
         item.selected = true;
-        set_selected_items.update(move |selected| {
+        let old_item = set_selected_items.try_update(move |selected| {
+            let mut old_item = None;
             if selected.len() == config.max {
-                selected.pop();
+                old_item = selected.pop().map(|mut old| {
+                    old.selected = false;
+                    old
+                });
             }
-            selected.push(item)
+            selected.push(item);
+            old_item
         });
+        if let Some(Some(old)) = old_item {
+            all_items.update(|items| {
+                items
+                    .as_mut()
+                    .expect("Tried to deselect before items are available")
+                    .push(old)
+            });
+        }
     };
     let deselect_item = move |id: usize| {
         let selected_idx = selected_items()
