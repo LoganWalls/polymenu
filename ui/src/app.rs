@@ -33,7 +33,7 @@ async fn fetch_items(query: String) -> Vec<Item> {
 #[component]
 pub fn App(cx: Scope, config: Config) -> impl IntoView {
     let using_callback = config.callback.is_some();
-    let (query, set_query) = create_signal(cx, config.query);
+    let (query, set_query) = create_signal(cx, config.query.clone());
     let (cursor_position, set_cursor_position) = create_signal::<usize>(cx, 0);
     let all_items = if config.callback.is_some() {
         create_resource(cx, query, fetch_items)
@@ -79,7 +79,12 @@ pub fn App(cx: Scope, config: Config) -> impl IntoView {
             })
             .expect("Tried to select before items are available");
         item.selected = true;
-        set_selected_items.update(move |selected| selected.push(item));
+        set_selected_items.update(move |selected| {
+            if selected.len() == config.max {
+                selected.pop();
+            }
+            selected.push(item)
+        });
     };
     let deselect_item = move |id: usize| {
         let selected_idx = selected_items()
@@ -134,14 +139,6 @@ pub fn App(cx: Scope, config: Config) -> impl IntoView {
         Action::Close => spawn_local(close(1)),
     };
 
-    let query_input_ref = create_node_ref::<Input>(cx);
-    let focus_query = move |_| {
-        if let Some(q) = query_input_ref.get() {
-            request_animation_frame(move || {
-                let _ = q.focus();
-            });
-        }
-    };
     register_keybinds(execute_action);
     let rendered_items = move || {
         visible_items()
@@ -159,12 +156,22 @@ pub fn App(cx: Scope, config: Config) -> impl IntoView {
             })
             .collect_view(cx)
     };
+    let query_ref = create_node_ref::<Input>(cx);
     view! { cx,
-        <main on:load=focus_query class="container">
+        <main class="container">
             <input
-                node_ref=query_input_ref
+                node_ref=query_ref
                 id="query"
                 on:input=move |ev| set_query(event_target_value(&ev))
+                on:focus=move |_| {
+                    if let Some(this) = query_ref.get() {
+                        let content_len = this.value().chars().count() as u32;
+                        this.set_selection_start(None).unwrap();
+                        this.set_selection_end(Some(content_len)).unwrap();
+                    }
+                }
+                placeholder=config.prompt
+                value=config.query
                 autocomplete="off"
                 autofocus
             />
