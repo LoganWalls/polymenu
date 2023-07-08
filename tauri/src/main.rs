@@ -4,7 +4,6 @@
 mod callback;
 mod item_source;
 
-use std::io::{self, Write};
 use std::sync::Mutex;
 
 use crate::item_source::ItemSource;
@@ -27,19 +26,17 @@ fn fetch_items(query: &str, item_source: tauri::State<Mutex<ItemSource>>) -> Vec
 
 #[tauri::command]
 fn output_items(items: Vec<Item>) {
-    io::stdout()
-        .write_all(
-            (items
-                .iter()
-                .map(|item| match &item.data.value {
-                    Some(value) => value.clone(),
-                    None => item.data.key.clone(),
-                })
-                .collect::<Vec<String>>()
-                .join("\n"))
-            .as_bytes(),
-        )
-        .unwrap();
+    println!(
+        "{}",
+        items
+            .iter()
+            .map(|item| match &item.data.value {
+                Some(value) => value.clone(),
+                None => item.data.key.clone(),
+            })
+            .collect::<Vec<String>>()
+            .join("\n")
+    );
 }
 
 fn main() {
