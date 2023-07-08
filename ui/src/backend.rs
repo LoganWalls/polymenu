@@ -30,6 +30,10 @@ pub async fn fetch_config(_: ()) -> Config {
     from_value::<Config>(invoke_no_args("fetch_config").await).unwrap()
 }
 
+pub async fn fetch_style(_: ()) -> String {
+    from_value::<String>(invoke_no_args("fetch_style").await).unwrap()
+}
+
 #[derive(Serialize, Deserialize)]
 struct OutputItemsArgs {
     items: Vec<Item>,

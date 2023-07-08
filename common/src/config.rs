@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, ValueEnum)]
 pub enum CaseSensitivity {
-    /// Case-insensitive only when query is entirely lowercase
+    /// Case-sensitive only if query contains uppercase characters
     Smart,
     /// Case-sensitive search
     Respect,
@@ -15,7 +15,7 @@ pub enum CaseSensitivity {
 #[derive(Parser, Serialize, Deserialize, Clone, Debug)]
 #[command(author, version, about, long_about = None)]
 pub struct Config {
-    /// Read a theme from a file
+    /// Read a config from a file
     #[arg(short, long, value_name = "FILE", value_hint = ValueHint::FilePath)]
     #[serde(skip)]
     pub config: Option<PathBuf>,
@@ -51,4 +51,8 @@ pub struct Config {
     #[arg(last = true, value_name = "COMMAND", verbatim_doc_comment, num_args = 1..)]
     #[serde(default)]
     pub callback: Option<Vec<String>>,
+
+    /// Read style from a CSS file
+    #[arg(short, long, value_name = "FILE", value_hint = ValueHint::FilePath)]
+    pub style: Option<PathBuf>,
 }

@@ -16,6 +16,11 @@ fn fetch_config(config: tauri::State<Config>) -> Config {
 }
 
 #[tauri::command]
+fn fetch_style(style: tauri::State<String>) -> String {
+    (*style).clone()
+}
+
+#[tauri::command]
 fn fetch_items(query: &str, item_source: tauri::State<Mutex<ItemSource>>) -> Vec<Item> {
     item_source
         .lock()
@@ -41,12 +46,17 @@ fn output_items(items: Vec<Item>) {
 
 fn main() {
     let config = Config::parse();
-    let item_source = ItemSource::new(&config);
     tauri::Builder::default()
+        .manage(if let Some(path) = &config.style {
+            std::fs::read_to_string(path).unwrap()
+        } else {
+            include_str!("../../styles/default.css").to_string()
+        })
+        .manage(Mutex::new(ItemSource::new(&config)))
         .manage(config)
-        .manage(Mutex::new(item_source))
         .invoke_handler(tauri::generate_handler![
             fetch_config,
+            fetch_style,
             fetch_items,
             output_items
         ])
