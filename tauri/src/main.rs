@@ -12,7 +12,6 @@ use polymenu_common::{Config, Parser};
 
 #[tauri::command]
 fn fetch_config(config: tauri::State<Config>) -> Config {
-    dbg!(&config);
     (*config).clone()
 }
 
@@ -22,7 +21,7 @@ fn fetch_items(query: &str, item_source: tauri::State<Mutex<ItemSource>>) -> Vec
         .lock()
         .unwrap()
         .get_items(query)
-        .expect("could not read items")
+        .expect("Could not read items")
 }
 
 fn main() {
@@ -33,5 +32,5 @@ fn main() {
         .manage(Mutex::new(item_source))
         .invoke_handler(tauri::generate_handler![fetch_config, fetch_items])
         .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .expect("Error while running tauri application");
 }
