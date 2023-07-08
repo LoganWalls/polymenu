@@ -4,6 +4,7 @@ use polymenu_common::item::Item;
 use polymenu_common::Config;
 
 use crate::backend;
+use crate::item::MenuItem;
 use crate::keybinds::{register_keybinds, Action};
 use crate::resize::fit_window_to_content;
 
@@ -135,25 +136,23 @@ pub fn App(cx: Scope, config: Config) -> impl IntoView {
         }
         Action::Close => spawn_local(backend::close(1)),
     };
-
     register_keybinds(execute_action);
+
+    let query_ref = create_node_ref::<Input>(cx);
     let rendered_items = move || {
         visible_items()
             .into_iter()
             .enumerate()
             .map(|(i, item)| {
                 view! { cx,
-                    <button
-                        class=("under-cursor", move|| i == cursor_position())
-                        class:selected=move|| item.selected
-                    >
-                        {item.data.key}
-                    </button>
+                    <MenuItem
+                        item
+                        under_cursor=(i == cursor_position())
+                    />
                 }
             })
             .collect_view(cx)
     };
-    let query_ref = create_node_ref::<Input>(cx);
     view! { cx,
         <main class="container">
             <input

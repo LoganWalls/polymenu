@@ -1,5 +1,6 @@
 mod app;
 mod backend;
+mod item;
 mod keybinds;
 mod matcher;
 mod resize;
