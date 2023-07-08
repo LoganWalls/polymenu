@@ -1,34 +1,11 @@
 use leptos::html::Input;
-use leptos::leptos_dom::console_log;
 use leptos::*;
 use polymenu_common::item::Item;
 use polymenu_common::Config;
-use serde::{Deserialize, Serialize};
-use serde_wasm_bindgen::{from_value, to_value};
-use wasm_bindgen::prelude::*;
 
+use crate::backend;
 use crate::keybinds::{register_keybinds, Action};
 use crate::resize::fit_window_to_content;
-
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
-    async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"], js_name = "invoke")]
-    pub async fn invoke_no_args(cmd: &str) -> JsValue;
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "process"], js_name = "exit")]
-    async fn close(exitCode: usize);
-}
-
-#[derive(Serialize, Deserialize)]
-struct FetchItemsArgs<'a> {
-    query: &'a str,
-}
-
-async fn fetch_items(query: String) -> Vec<Item> {
-    let args = to_value(&FetchItemsArgs { query: &query }).unwrap();
-    from_value::<Vec<Item>>(invoke("fetch_items", args).await).unwrap()
-}
 
 #[component]
 pub fn App(cx: Scope, config: Config) -> impl IntoView {
@@ -36,9 +13,9 @@ pub fn App(cx: Scope, config: Config) -> impl IntoView {
     let (query, set_query) = create_signal(cx, config.query.clone());
     let (cursor_position, set_cursor_position) = create_signal::<usize>(cx, 0);
     let all_items = if config.callback.is_some() {
-        create_resource(cx, query, fetch_items)
+        create_resource(cx, query, backend::fetch_items)
     } else {
-        create_resource(cx, || "".to_string(), fetch_items)
+        create_resource(cx, || "".to_string(), backend::fetch_items)
     };
     let (selected_items, set_selected_items) = create_signal::<Vec<Item>>(cx, Vec::new());
     let visible_items = move || {
@@ -76,7 +53,6 @@ pub fn App(cx: Scope, config: Config) -> impl IntoView {
             .find_map(|(i, item)| if item.id == id { Some(i) } else { None })
             .expect("Tried to deselect with invalid id")
     };
-
     let select_item = move |id: usize| {
         let mut item = all_items
             .try_update(|items| {
@@ -121,6 +97,7 @@ pub fn App(cx: Scope, config: Config) -> impl IntoView {
                 .push(item)
         });
     };
+
     let execute_action = move |action: &Action| match action {
         Action::CursorUp => {
             let i = cursor_position();
@@ -147,14 +124,16 @@ pub fn App(cx: Scope, config: Config) -> impl IntoView {
                 select_item(item.id);
             }
         }
-        Action::Submit => console_log(
-            &selected_items()
-                .iter()
-                .map(|item| item.data.key.as_str())
-                .collect::<Vec<&str>>()
-                .join("\n"),
-        ),
-        Action::Close => spawn_local(close(1)),
+        Action::Submit => {
+            let selected = selected_items();
+            let items = if selected.is_empty() {
+                vec![visible_items()[cursor_position()].clone()]
+            } else {
+                selected
+            };
+            spawn_local(backend::output_items(items));
+        }
+        Action::Close => spawn_local(backend::close(1)),
     };
 
     register_keybinds(execute_action);

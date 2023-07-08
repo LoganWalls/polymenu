@@ -1,17 +1,12 @@
 mod app;
+mod backend;
 mod keybinds;
 mod matcher;
 mod resize;
 
-use app::invoke_no_args;
-use app::*;
+use crate::app::*;
+use crate::backend::fetch_config;
 use leptos::*;
-use polymenu_common::Config;
-use serde_wasm_bindgen::from_value;
-
-async fn fetch_config(_: ()) -> Config {
-    from_value::<Config>(invoke_no_args("fetch_config").await).unwrap()
-}
 
 #[component]
 fn AppWrapper(cx: Scope) -> impl IntoView {

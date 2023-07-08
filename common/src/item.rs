@@ -5,6 +5,7 @@ use std::{error::Error, io};
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct ItemData {
     pub key: String,
+    pub value: Option<String>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
