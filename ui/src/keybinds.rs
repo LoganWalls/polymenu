@@ -65,6 +65,7 @@ pub fn register_keybinds(execute_action: impl Fn(&Action) + 'static) {
         ((&vec!["tab"]).into(), Action::ToggleSelection),
         ((&vec!["enter"]).into(), Action::Submit),
         ((&vec!["ctrl", "d"]).into(), Action::Close),
+        ((&vec!["escape"]).into(), Action::Close),
     ]);
     window_event_listener(keydown, move |ev: KeyboardEvent| {
         let code = ev.key_code();
