@@ -69,13 +69,22 @@ pub fn App(cx: Scope, config: Config) -> impl IntoView {
         items
     };
 
+    let item_index = move |collection: &Vec<Item>, id: usize| {
+        collection
+            .iter()
+            .enumerate()
+            .find_map(|(i, item)| if item.id == id { Some(i) } else { None })
+            .expect("Tried to deselect with invalid id")
+    };
+
     let select_item = move |id: usize| {
         let mut item = all_items
             .try_update(|items| {
-                items
+                let items = items
                     .as_mut()
-                    .expect("Tried to select before items are available")
-                    .remove(id)
+                    .expect("Tried to select before items are available");
+                let index = item_index(items, id);
+                items.remove(index)
             })
             .expect("Tried to select before items are available");
         item.selected = true;
@@ -100,13 +109,9 @@ pub fn App(cx: Scope, config: Config) -> impl IntoView {
         }
     };
     let deselect_item = move |id: usize| {
-        let selected_idx = selected_items()
-            .iter()
-            .enumerate()
-            .find_map(|(i, item)| if item.id == id { Some(i) } else { None })
-            .expect("Tried to deselect with invalid id");
+        let index = item_index(&selected_items(), id);
         let mut item = set_selected_items
-            .try_update(move |selected| selected.remove(selected_idx))
+            .try_update(move |selected| selected.remove(index))
             .expect("Tried to deselect with invalid id");
         item.selected = false;
         all_items.update(|items| {
