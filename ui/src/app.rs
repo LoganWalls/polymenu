@@ -13,6 +13,11 @@ pub fn App(cx: Scope, config: Config) -> impl IntoView {
     let using_callback = config.callback.is_some();
     let (query, set_query) = create_signal(cx, config.query.clone());
     let (cursor_position, set_cursor_position) = create_signal::<usize>(cx, 0);
+    create_effect(cx, move |_| {
+        query();
+        set_cursor_position(0);
+    });
+
     let all_items = if config.callback.is_some() {
         create_resource(cx, query, backend::fetch_items)
     } else {
@@ -42,7 +47,6 @@ pub fn App(cx: Scope, config: Config) -> impl IntoView {
             .chain(selected_items())
             .take(config.max_visible)
             .collect::<Vec<Item>>();
-        set_cursor_position(0);
         fit_window_to_content();
         items
     };
