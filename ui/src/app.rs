@@ -1,11 +1,10 @@
 use leptos::html::Input;
 use leptos::*;
-use polymenu_common::item::Item;
-use polymenu_common::Config;
+use polymenu_common::{item::Item, keybinds::Action, Config};
 
 use crate::backend;
 use crate::item::MenuItem;
-use crate::keybinds::{register_keybinds, Action};
+use crate::keybinds::register_keybinds;
 use crate::resize::fit_window_to_content;
 
 #[component]
@@ -104,7 +103,7 @@ pub fn App(cx: Scope, config: Config) -> impl IntoView {
     };
 
     let execute_action = move |action: &Action| match action {
-        Action::CursorUp => {
+        Action::CursorPrevious => {
             let i = cursor_position();
             set_cursor_position(if i == 0 {
                 visible_items().len() - 1
@@ -112,7 +111,7 @@ pub fn App(cx: Scope, config: Config) -> impl IntoView {
                 i - 1
             })
         }
-        Action::CursorDown => {
+        Action::CursorNext => {
             let i = cursor_position();
             set_cursor_position(if (i + 1) == visible_items().len() {
                 0
@@ -140,7 +139,7 @@ pub fn App(cx: Scope, config: Config) -> impl IntoView {
         }
         Action::Close => spawn_local(backend::close(1)),
     };
-    register_keybinds(execute_action);
+    register_keybinds(&config.keybinds, execute_action);
 
     let query_ref = create_node_ref::<Input>(cx);
     let rendered_items = move || {

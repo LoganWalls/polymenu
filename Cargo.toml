@@ -1,3 +1,7 @@
 [workspace]
 resolver = "2"
-members = ["ui", "tauri", "common"]
+members = ["ui", "tauri", "common", "derive"]
+
+[workspace.dependencies]
+leptos = { version = "0.4.2", features = ["nightly", "csr"] }
+serde = { version = "1.0.164", features = ["derive"] }

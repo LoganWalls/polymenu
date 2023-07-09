@@ -4,11 +4,12 @@
 mod callback;
 mod item_source;
 
+use std::error::Error;
 use std::sync::Mutex;
 
 use crate::item_source::ItemSource;
 use polymenu_common::item::Item;
-use polymenu_common::{Config, Parser};
+use polymenu_common::{Config, Parser, UpdateFromOther};
 
 #[tauri::command]
 fn fetch_config(config: tauri::State<Config>) -> Config {
@@ -44,8 +45,14 @@ fn output_items(items: Vec<Item>) {
     );
 }
 
-fn main() {
-    let config = Config::parse();
+fn main() -> Result<(), Box<dyn Error>> {
+    let cli_opts = Config::parse();
+    let config_str = &cli_opts.config.as_ref().map_or_else(
+        || include_str!("../../default-config.toml").to_string(),
+        |path| std::fs::read_to_string(path).unwrap(),
+    );
+    let mut config: Config = toml::from_str(config_str)?;
+    config.update_from_other(cli_opts);
     tauri::Builder::default()
         .manage(if let Some(path) = &config.style {
             std::fs::read_to_string(path).unwrap()
@@ -62,4 +69,5 @@ fn main() {
         ])
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");
+    Ok(())
 }

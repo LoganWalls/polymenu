@@ -1,0 +1,31 @@
+# Prompt to be displayed as a placeholder in the text input box
+prompt = ""
+
+# Initial value for the text input box
+query = ""
+
+# How to treat case-sensitivity
+case = "smart"
+
+# Maximum number of items that can be selected
+max = 1
+
+# Maximum number of items that can be displayed at once
+max_visible = 10
+
+# Specify to read items from a file instead of stdin
+# file = "path/to/your/file"
+
+# Specify to read items from a shell command that is executed each time the query changes
+# `"$QUERY"` will be substituted with the current query value before executing the command
+# callback = ["echo", "$QUERY"]
+
+# Specify to read styles from a file
+# style = "path/to/your/file.css"
+
+[keybinds]
+cursor_previous = [["ctrl", "k"], ["ArrowUp"]]
+cursor_next = [["ctrl", "j"], ["ArrowDown"]]
+toggle_selection = [["tab"]]
+submit = [["enter"]]
+close = [["escape"], ["ctrl", "d"]]
