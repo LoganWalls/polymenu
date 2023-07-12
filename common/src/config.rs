@@ -64,7 +64,7 @@ pub struct Config {
 
     /// Read style from a CSS file
     #[arg(short, long, value_name = "FILE", value_hint = ValueHint::FilePath)]
-    pub style: Option<PathBuf>,
+    pub style: Option<Vec<PathBuf>>,
 
     #[clap(skip)]
     pub keybinds: HashMap<Action, Vec<Key>>,

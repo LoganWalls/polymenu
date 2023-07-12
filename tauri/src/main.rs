@@ -17,8 +17,8 @@ fn fetch_config(config: tauri::State<Config>) -> Config {
 }
 
 #[tauri::command]
-fn fetch_style(style: tauri::State<String>) -> String {
-    (*style).clone()
+fn fetch_styles(styles: tauri::State<Vec<String>>) -> Vec<String> {
+    (*styles).clone()
 }
 
 #[tauri::command]
@@ -54,16 +54,19 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut config: Config = toml::from_str(config_str)?;
     config.update_from_other(cli_opts);
     tauri::Builder::default()
-        .manage(if let Some(path) = &config.style {
-            std::fs::read_to_string(path).unwrap()
+        .manage(if let Some(paths) = &config.style {
+            paths
+                .iter()
+                .map(|p| std::fs::read_to_string(p).unwrap())
+                .collect::<Vec<String>>()
         } else {
-            include_str!("../../styles/default.css").to_string()
+            vec![include_str!("../../styles/default.css").to_string()]
         })
         .manage(Mutex::new(ItemSource::new(&config)))
         .manage(config)
         .invoke_handler(tauri::generate_handler![
             fetch_config,
-            fetch_style,
+            fetch_styles,
             fetch_items,
             output_items
         ])

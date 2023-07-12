@@ -11,13 +11,15 @@ use leptos::*;
 
 #[component]
 fn AppWrapper(cx: Scope) -> impl IntoView {
-    let style = create_resource(cx, || {}, fetch_style);
+    let styles = create_resource(cx, || {}, fetch_style);
     create_effect(cx, move |_| {
-        if let Some(css) = style.read(cx) {
+        if let Some(css_blocks) = styles.read(cx) {
             let head = document().head().expect("Could not find head tag");
-            mount_to(head.into(), |cx| {
-                view! {cx, <style>{css}</style>}
-            });
+            for css in css_blocks {
+                mount_to(head.clone().into(), |cx| {
+                    view! {cx, <style>{css}</style>}
+                });
+            }
         }
     });
 
