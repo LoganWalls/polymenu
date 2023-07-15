@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use leptos::html::Input;
 use leptos::*;
 use polymenu_common::{item::Item, keybinds::Action, Config};
@@ -6,6 +8,18 @@ use crate::backend;
 use crate::item::MenuItem;
 use crate::keybinds::register_keybinds;
 use crate::resize::fit_window_to_content;
+
+#[component]
+pub fn Image(cx: Scope, path: PathBuf) -> impl IntoView {
+    let img_data = create_resource(cx, move || path.clone(), backend::fetch_image);
+    let img = move || {
+        img_data.with(
+            cx,
+            |data| view! {cx, <><img src=data.b64_content_string() data-path=&data.path/><>},
+        )
+    };
+    view! {cx, <>{img}</>}
+}
 
 #[component]
 pub fn App(cx: Scope, config: Config) -> impl IntoView {

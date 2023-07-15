@@ -2781,11 +2781,13 @@ dependencies = [
 name = "polymenu-common"
 version = "0.1.0"
 dependencies = [
+ "base64 0.21.2",
  "clap",
  "csv",
  "leptos",
  "polymenu-derive",
  "serde",
+ "tauri-icns",
 ]
 
 [[package]]
@@ -3880,6 +3882,16 @@ dependencies = [
  "time",
  "uuid",
  "walkdir",
+]
+
+[[package]]
+name = "tauri-icns"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "03b7eb4d0d43724ba9ba6a6717420ee68aee377816a3edbb45db8c18862b1431"
+dependencies = [
+ "byteorder",
+ "png",
 ]
 
 [[package]]

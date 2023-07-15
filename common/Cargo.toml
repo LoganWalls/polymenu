@@ -11,3 +11,5 @@ clap = { version = "4.3.10", features = ["derive"] }
 csv = "1.2.2"
 leptos = { workspace = true }
 serde = { workspace = true }
+tauri-icns = "0.1.0"
+base64 = "0.21.2"
