@@ -8,7 +8,6 @@ edition = "2021"
 [dependencies]
 polymenu-derive = { path = "../derive" }
 clap = { version = "4.3.10", features = ["derive"] }
-csv = "1.2.2"
 leptos = { workspace = true }
 serde = { workspace = true }
 tauri-icns = "0.1.0"

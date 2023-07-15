@@ -1,6 +1,5 @@
-use polymenu_common::item;
 use std::error::Error;
-use std::io;
+use std::io::Cursor;
 use std::process::Command;
 
 const QUERY_VAR_NAME: &str = "$QUERY";
@@ -20,7 +19,7 @@ impl Callback {
         Self { program, args }
     }
 
-    pub fn call(&mut self, query: &str) -> Result<Vec<item::Item>, Box<dyn Error>> {
+    pub fn call(&mut self, query: &str) -> Result<Cursor<Vec<u8>>, Box<dyn Error>> {
         let output = Command::new(&self.program)
             .args(
                 self.args
@@ -28,6 +27,6 @@ impl Callback {
                     .map(|a| if a == QUERY_VAR_NAME { query } else { a }),
             )
             .output()?;
-        item::parse_items(io::Cursor::new(output.stdout))
+        Ok(Cursor::new(output.stdout))
     }
 }

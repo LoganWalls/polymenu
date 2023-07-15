@@ -7,7 +7,7 @@ use crate::keybinds::{Action, Key};
 use crate::UpdateFromOther;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, ValueEnum)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "snake_case")]
 pub enum CaseSensitivity {
     /// Case-sensitive only if query contains uppercase characters
     Smart,
@@ -20,6 +20,23 @@ pub enum CaseSensitivity {
 impl Default for CaseSensitivity {
     fn default() -> Self {
         Self::Smart
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, ValueEnum)]
+#[serde(rename_all = "snake_case")]
+pub enum ItemFormat {
+    /// CSV without header
+    HeadlessCsv,
+    /// CSV with header
+    Csv,
+    /// JSON lines
+    Json,
+}
+
+impl Default for ItemFormat {
+    fn default() -> Self {
+        Self::HeadlessCsv
     }
 }
 
@@ -55,6 +72,10 @@ pub struct Config {
     /// Read items from a file instead of stdin
     #[arg(short, long, value_name = "FILE", value_hint = ValueHint::FilePath)]
     pub file: Option<PathBuf>,
+
+    /// How the items are formated in the input
+    #[arg(long, value_enum, value_name = "FORMAT")]
+    pub format: Option<ItemFormat>,
 
     /// Execute an external command to populate items whenever the query is changed
     /// String args with the value $QUERY will be set to the current query before
