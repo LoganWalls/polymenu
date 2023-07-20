@@ -3,7 +3,7 @@ mod image;
 pub mod item;
 pub mod keybinds;
 pub use clap::Parser;
-pub use config::{CaseSensitivity, Config, ItemFormat};
+pub use config::*;
 pub use image::ImageData;
 pub use polymenu_derive::UpdateFromOther;
 

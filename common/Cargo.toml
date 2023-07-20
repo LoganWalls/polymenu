@@ -10,5 +10,7 @@ polymenu-derive = { path = "../derive" }
 clap = { version = "4.3.10", features = ["derive"] }
 leptos = { workspace = true }
 serde = { workspace = true }
+serde_json = { workspace = true }
 tauri-icns = "0.1.0"
 base64 = "0.21.2"
+infer = "0.15.0"

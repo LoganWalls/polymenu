@@ -1,10 +1,13 @@
 use serde::{Deserialize, Serialize};
 use std::cmp::{Ord, Ordering};
+use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct ItemData {
     pub key: String,
     pub value: Option<String>,
+    #[serde(flatten)]
+    pub extra: BTreeMap<String, String>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]

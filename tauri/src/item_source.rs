@@ -1,5 +1,5 @@
 use crate::callback::Callback;
-use polymenu_common::item::{Item, ItemData};
+use polymenu_common::item::Item;
 use polymenu_common::ItemFormat;
 use std::error::Error;
 use std::fs::File;
@@ -15,6 +15,7 @@ pub enum InputSource {
 pub struct ItemSource {
     input: InputSource,
     format: ItemFormat,
+    headers: Option<Vec<String>>,
 }
 
 impl ItemSource {
@@ -40,7 +41,11 @@ impl ItemSource {
             (Some(path), _) => InputSource::File(path.to_path_buf()),
             (None, Some(args)) => InputSource::Callback(Callback::new(args.to_vec())),
         };
-        Self { input, format }
+        Self {
+            input,
+            format,
+            headers: cli_args.columns.clone(),
+        }
     }
 
     pub fn get_items(&mut self, query: &str) -> Result<Vec<Item>, Box<dyn Error>> {
@@ -50,19 +55,32 @@ impl ItemSource {
             InputSource::Callback(callback) => Box::new(callback.call(query)?),
         };
         match self.format {
-            ItemFormat::HeadlessCsv => read_csv(source, false),
-            ItemFormat::Csv => read_csv(source, true),
+            ItemFormat::HeadlessCsv => read_csv(
+                source,
+                false,
+                self.headers
+                    .clone()
+                    .or_else(|| Some(vec!["key".into(), "value".into()])),
+            ),
+            ItemFormat::Csv => read_csv(source, true, self.headers.clone()),
             ItemFormat::Json => read_json(source),
         }
     }
 }
 
-pub fn read_csv(source: impl io::Read, has_headers: bool) -> Result<Vec<Item>, Box<dyn Error>> {
+pub fn read_csv(
+    source: impl io::Read,
+    has_headers: bool,
+    user_headers: Option<Vec<String>>,
+) -> Result<Vec<Item>, Box<dyn Error>> {
     let mut rdr = csv::ReaderBuilder::new()
         .has_headers(has_headers)
         .from_reader(source);
+    if let Some(h) = user_headers {
+        rdr.set_headers(h.into());
+    }
     let mut result = Vec::new();
-    for (i, data) in rdr.deserialize::<ItemData>().enumerate() {
+    for (i, data) in rdr.into_deserialize().enumerate() {
         result.push(Item::new(i, data?));
     }
     Ok(result)

@@ -5,3 +5,4 @@ members = ["ui", "tauri", "common", "derive"]
 [workspace.dependencies]
 leptos = { version = "0.4.2", features = ["nightly", "csr"] }
 serde = { version = "1.0.164", features = ["derive"] }
+serde_json = "1.0.102"
