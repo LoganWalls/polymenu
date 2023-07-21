@@ -149,11 +149,12 @@ pub fn App(cx: Scope, config: Config) -> impl IntoView {
         visible_items()
             .into_iter()
             .enumerate()
-            .map(|(i, item)| {
+            .map(|(index, item)| {
                 view! { cx,
                     <MenuItem
                         item
-                        under_cursor=(i == cursor_position())
+                        index
+                        cursor_position
                         extra_fields=config.extra.clone()
                     />
                 }

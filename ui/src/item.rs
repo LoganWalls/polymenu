@@ -8,7 +8,8 @@ use polymenu_common::FieldType;
 pub fn MenuItem(
     cx: Scope,
     item: Item,
-    under_cursor: bool,
+    index: usize,
+    cursor_position: ReadSignal<usize>,
     extra_fields: Option<BTreeMap<String, FieldType>>,
 ) -> impl IntoView {
     let content = move || {
@@ -63,7 +64,7 @@ pub fn MenuItem(
     view! {cx,
         <button
             class="item"
-            class=("under-cursor", move|| under_cursor)
+            class=("under-cursor", move|| cursor_position() == index)
             class:selected=move|| item.selected
         >
             {content}
