@@ -1,30 +1,27 @@
 use base64::{engine::general_purpose as b64, Engine as _};
-use serde::{Deserialize, Serialize};
+use infer::Infer;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
 use tauri_icns::IconFamily;
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct ImageData {
-    pub content: Vec<u8>,
-    pub mime: String,
-    pub path: String,
+pub struct ImageReader {
+    infer: Infer,
 }
 
-fn icns_matcher(buf: &[u8]) -> bool {
-    buf.len() >= 4 && buf[..4] == [0x69, 0x63, 0x6e, 0x73]
-}
+impl ImageReader {
+    pub fn new() -> Self {
+        let mut infer = Infer::new();
+        infer.add("image/x-icns", "icns", icns_matcher);
+        Self { infer }
+    }
 
-impl ImageData {
-    pub fn from_path(path: &PathBuf) -> std::io::Result<Self> {
-        let mut info = infer::Infer::new();
-        info.add("image/x-icns", "icns", icns_matcher);
-        dbg!(&path);
-        let kind = info
+    pub fn read_data(&self, path: &PathBuf) -> std::io::Result<String> {
+        let kind = self
+            .infer
             .get_from_path(path)?
             .unwrap_or_else(|| panic!("Unrecogized file type: {}", path.to_string_lossy()));
-        let (content, mime) = match kind.extension() {
+        let (content, mime): (Vec<u8>, String) = match kind.extension() {
             "icns" => {
                 let file = BufReader::new(File::open(path)?);
                 let icon_family = IconFamily::read(file)?;
@@ -46,15 +43,20 @@ impl ImageData {
             }
         };
 
-        Ok(ImageData {
-            content,
-            mime,
-            path: path.to_str().unwrap().into(),
-        })
+        Ok(format!(
+            "data:{};base64,{}",
+            &mime,
+            b64::STANDARD_NO_PAD.encode(content)
+        ))
     }
+}
 
-    pub fn b64_content_string(&self) -> String {
-        let content = b64::STANDARD_NO_PAD.encode(&self.content);
-        format!("data:{};base64,{}", &self.mime, &content)
+impl Default for ImageReader {
+    fn default() -> Self {
+        Self::new()
     }
+}
+
+fn icns_matcher(buf: &[u8]) -> bool {
+    buf.len() >= 4 && buf[..4] == [0x69, 0x63, 0x6e, 0x73]
 }

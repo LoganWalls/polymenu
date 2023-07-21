@@ -1,6 +1,7 @@
 use crate::callback::Callback;
 use polymenu_common::item::Item;
-use polymenu_common::ItemFormat;
+use polymenu_common::{FieldType, ImageReader, ItemFormat};
+use std::collections::BTreeMap;
 use std::error::Error;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
@@ -16,6 +17,7 @@ pub struct ItemSource {
     input: InputSource,
     format: ItemFormat,
     headers: Option<Vec<String>>,
+    extra_fields: Option<BTreeMap<String, FieldType>>,
 }
 
 impl ItemSource {
@@ -45,6 +47,7 @@ impl ItemSource {
             input,
             format,
             headers: cli_args.columns.clone(),
+            extra_fields: cli_args.extra.clone(),
         }
     }
 
@@ -54,7 +57,7 @@ impl ItemSource {
             InputSource::File(path) => Box::new(File::open(path)?),
             InputSource::Callback(callback) => Box::new(callback.call(query)?),
         };
-        match self.format {
+        let mut items = match self.format {
             ItemFormat::HeadlessCsv => read_csv(
                 source,
                 false,
@@ -64,7 +67,32 @@ impl ItemSource {
             ),
             ItemFormat::Csv => read_csv(source, true, self.headers.clone()),
             ItemFormat::Json => read_json(source),
+        }?;
+        if let Some(extra) = &self.extra_fields {
+            let image_reader = ImageReader::new();
+            extra
+                .iter()
+                .filter_map(|(field_name, field_type)| {
+                    if field_type == &FieldType::Image {
+                        Some(field_name)
+                    } else {
+                        None
+                    }
+                })
+                .for_each(|field_name| {
+                    for item in items.iter_mut() {
+                        if let Some(path) = item.data.extra.get(field_name) {
+                            item.data.extra.insert(
+                                field_name.clone(),
+                                image_reader.read_data(&path.into()).unwrap(),
+                            );
+                        } else {
+                            panic!("Data for {field_name} not provided");
+                        }
+                    }
+                });
         }
+        Ok(items)
     }
 }
 

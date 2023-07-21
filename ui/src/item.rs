@@ -1,23 +1,8 @@
 use std::collections::BTreeMap;
-use std::path::PathBuf;
 
 use leptos::*;
 use polymenu_common::item::Item;
 use polymenu_common::FieldType;
-
-use crate::backend;
-
-#[component]
-pub fn Image(cx: Scope, path: PathBuf) -> impl IntoView {
-    let img_data = create_resource(cx, move || path.clone(), backend::fetch_image);
-    let img = move || {
-        img_data.with(
-            cx,
-            |data| view! {cx, <><img src=data.b64_content_string() data-value=&data.path/><>},
-        )
-    };
-    view! {cx, <>{img}</>}
-}
 
 #[component]
 pub fn MenuItem(
@@ -29,6 +14,7 @@ pub fn MenuItem(
     let content = move || {
         let mut result = Vec::new();
         if let Some(inds) = &item.match_indices {
+            let mut label = Vec::new();
             let n_chars = item.data.key.chars().count();
             let mut start = 0;
             let mut chunk_is_match = inds.contains(&start);
@@ -37,7 +23,7 @@ pub fn MenuItem(
                 let char_is_match = inds.contains(&i);
                 if char_is_match != chunk_is_match || is_last_char {
                     let end = if is_last_char { i + 1 } else { i };
-                    result.push(
+                    label.push(
                         view! {cx,
                             <span
                                 class="item-key"
@@ -52,6 +38,7 @@ pub fn MenuItem(
                     chunk_is_match = char_is_match;
                 }
             }
+            result.push(view! {cx, <span class="item-key">{label}</span>}.into_view(cx));
         } else {
             result.push(
                 view! {cx, <span data-value={&item.data.key}>{&item.data.key}</span>}.into_view(cx),
@@ -66,7 +53,7 @@ pub fn MenuItem(
                     .expect(&format!("Could not find extra field: {name}"));
                 result.push(match field_type {
                     FieldType::String => view! {cx, <span class=name>{value}</span>}.into_view(cx),
-                    FieldType::Image => view! {cx, <Image path=value.into() /> }.into_view(cx),
+                    FieldType::Image => view! {cx,  <img src=value />}.into_view(cx),
                     FieldType::Url => view! {cx, <iframe src=value></iframe> }.into_view(cx),
                 });
             }
