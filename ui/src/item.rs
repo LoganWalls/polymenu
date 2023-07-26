@@ -44,6 +44,7 @@ pub fn MenuItem(
     let content = move || {
         let mut result = Vec::new();
         if let Some(inds) = &item.match_indices {
+            let mut chunks = Vec::new();
             let n_chars = item.data.key.chars().count();
             let mut start = 0;
             let mut chunk_is_match = inds.contains(&start);
@@ -52,7 +53,7 @@ pub fn MenuItem(
                 let char_is_match = inds.contains(&i);
                 if char_is_match != chunk_is_match || is_last_char {
                     let end = if is_last_char { i + 1 } else { i };
-                    result.push(
+                    chunks.push(
                         view! {cx,
                             <span
                                 class="item-key"
@@ -67,6 +68,7 @@ pub fn MenuItem(
                     chunk_is_match = char_is_match;
                 }
             }
+            result.push(view! {cx, <span class="item-key">{chunks}</span>}.into_view(cx))
         } else {
             result.push(
                 view! {cx, <span data-value={&item.data.key}>{&item.data.key}</span>}.into_view(cx),
