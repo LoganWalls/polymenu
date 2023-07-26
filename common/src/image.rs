@@ -18,13 +18,17 @@ fn icns_matcher(buf: &[u8]) -> bool {
 
 pub const PLACEHOLDER_IMG: &[u8] = include_bytes!("../../assets/placeholder-app-icon.png");
 pub static PLACEHOLDER_IMG_STRING: OnceLock<String> = OnceLock::new();
+pub static INFER: OnceLock<infer::Infer> = OnceLock::new();
 
 impl ImageData {
     pub fn from_path(path: &PathBuf) -> std::io::Result<Self> {
-        let mut info = infer::Infer::new();
-        info.add("image/x-icns", "icns", icns_matcher);
         dbg!(&path);
-        let kind = info
+        let kind = INFER
+            .get_or_init(|| {
+                let mut infer = infer::Infer::new();
+                infer.add("image/x-icns", "icns", icns_matcher);
+                infer
+            })
             .get_from_path(path)?
             .unwrap_or_else(|| panic!("Unrecogized file type: {}", path.to_string_lossy()));
         let (content, mime) = match kind.extension() {
