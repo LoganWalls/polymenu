@@ -4,7 +4,7 @@ use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
 use std::sync::OnceLock;
-use tauri_icns::IconFamily;
+use tauri_icns::{Encoding, IconFamily};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ImageData {
@@ -35,12 +35,15 @@ impl ImageData {
             "icns" => {
                 let file = BufReader::new(File::open(path)?);
                 let icon_family = IconFamily::read(file)?;
-                let best_quality_type = *icon_family
+                let icon_type = icon_family
                     .available_icons()
-                    .iter()
-                    .max_by_key(|icon_type| icon_type.pixel_height())
+                    .into_iter()
+                    .filter(|&icon_type| {
+                        icon_type.encoding() == Encoding::JP2PNG && icon_type.pixel_width() < 512
+                    })
+                    .max_by_key(|&icon_type| icon_type.pixel_width())
                     .expect(".icns file does not contain any png images");
-                let content = if let Ok(icon) = icon_family.get_icon_with_type(best_quality_type) {
+                let content = if let Ok(icon) = icon_family.get_icon_with_type(icon_type) {
                     icon.into_data().into()
                 } else {
                     PLACEHOLDER_IMG.to_vec()
