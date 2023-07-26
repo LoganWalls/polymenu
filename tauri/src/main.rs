@@ -5,11 +5,12 @@ mod callback;
 mod item_source;
 
 use std::error::Error;
+use std::path::PathBuf;
 use std::sync::Mutex;
 
 use crate::item_source::ItemSource;
 use polymenu_common::item::Item;
-use polymenu_common::{Config, Parser, UpdateFromOther};
+use polymenu_common::{Config, ImageData, Parser, UpdateFromOther};
 
 #[tauri::command]
 fn fetch_config(config: tauri::State<Config>) -> Config {
@@ -19,6 +20,11 @@ fn fetch_config(config: tauri::State<Config>) -> Config {
 #[tauri::command]
 fn fetch_styles(styles: tauri::State<Vec<String>>) -> Vec<String> {
     (*styles).clone()
+}
+
+#[tauri::command]
+fn fetch_image(path: PathBuf) -> ImageData {
+    ImageData::from_path(&path).unwrap()
 }
 
 #[tauri::command]
@@ -68,6 +74,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             fetch_config,
             fetch_styles,
             fetch_items,
+            fetch_image,
             output_items
         ])
         .run(tauri::generate_context!())

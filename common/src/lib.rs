@@ -4,7 +4,7 @@ pub mod item;
 pub mod keybinds;
 pub use clap::Parser;
 pub use config::*;
-pub use image::ImageReader;
+pub use image::ImageData;
 pub use polymenu_derive::UpdateFromOther;
 
 pub trait UpdateFromOther {
