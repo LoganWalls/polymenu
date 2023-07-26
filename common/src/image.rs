@@ -3,18 +3,21 @@ use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
+use std::sync::OnceLock;
 use tauri_icns::IconFamily;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ImageData {
     pub content: Vec<u8>,
     pub mime: String,
-    pub path: String,
 }
 
 fn icns_matcher(buf: &[u8]) -> bool {
     buf.len() >= 4 && buf[..4] == [0x69, 0x63, 0x6e, 0x73]
 }
+
+pub const PLACEHOLDER_IMG: &[u8] = include_bytes!("../../assets/placeholder-app-icon.png");
+pub static PLACEHOLDER_IMG_STRING: OnceLock<String> = OnceLock::new();
 
 impl ImageData {
     pub fn from_path(path: &PathBuf) -> std::io::Result<Self> {
@@ -36,7 +39,7 @@ impl ImageData {
                 let content = if let Ok(icon) = icon_family.get_icon_with_type(best_quality_type) {
                     icon.into_data().into()
                 } else {
-                    include_bytes!("../../assets/placeholder-app-icon.png").to_vec()
+                    PLACEHOLDER_IMG.to_vec()
                 };
                 (content, "image/png".into())
             }
@@ -46,11 +49,7 @@ impl ImageData {
             }
         };
 
-        Ok(ImageData {
-            content,
-            mime,
-            path: path.to_str().unwrap().into(),
-        })
+        Ok(ImageData { content, mime })
     }
 
     pub fn b64_content_string(&self) -> String {

@@ -1,4 +1,6 @@
+use std::collections::HashMap;
 use std::path::PathBuf;
+use std::sync::{Mutex, OnceLock};
 
 use polymenu_common::item::Item;
 use polymenu_common::{Config, ImageData};
@@ -23,11 +25,6 @@ struct FetchItemsArgs<'a> {
     query: &'a str,
 }
 
-#[derive(Serialize, Deserialize)]
-struct FetchImageArgs {
-    path: PathBuf,
-}
-
 pub async fn fetch_items(query: String) -> Vec<Item> {
     let args = to_value(&FetchItemsArgs { query: &query }).unwrap();
     from_value::<Vec<Item>>(invoke("fetch_items", args).await).unwrap()
@@ -41,9 +38,32 @@ pub async fn fetch_style(_: ()) -> Vec<String> {
     from_value::<Vec<String>>(invoke_no_args("fetch_styles").await).unwrap()
 }
 
-pub async fn fetch_image(path: PathBuf) -> ImageData {
-    let args = to_value(&FetchImageArgs { path }).unwrap();
-    from_value::<ImageData>(invoke("fetch_image", args).await).unwrap()
+#[derive(Serialize, Deserialize)]
+struct FetchImageArgs {
+    path: PathBuf,
+}
+static IMG_CACHE: OnceLock<Mutex<HashMap<PathBuf, String>>> = OnceLock::new();
+
+pub async fn fetch_image(path: PathBuf) -> String {
+    {
+        let cache = IMG_CACHE
+            .get_or_init(|| Mutex::new(HashMap::new()))
+            .lock()
+            .unwrap();
+        if let Some(img) = cache.get(&path) {
+            return img.clone();
+        }
+    }
+    let args = to_value(&FetchImageArgs { path: path.clone() }).unwrap();
+    let img = from_value::<ImageData>(invoke("fetch_image", args).await)
+        .expect(&format!("Could not load image {}", path.to_string_lossy()))
+        .b64_content_string();
+    IMG_CACHE
+        .get_or_init(|| Mutex::new(HashMap::new()))
+        .lock()
+        .unwrap()
+        .insert(path, img.clone());
+    img
 }
 
 #[derive(Serialize, Deserialize)]

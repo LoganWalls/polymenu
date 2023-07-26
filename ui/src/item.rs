@@ -3,18 +3,32 @@ use std::path::PathBuf;
 
 use leptos::*;
 use polymenu_common::item::Item;
-use polymenu_common::FieldType;
+use polymenu_common::{FieldType, ImageData, PLACEHOLDER_IMG, PLACEHOLDER_IMG_STRING};
 
 use crate::backend;
 
 #[component]
 pub fn Image(cx: Scope, path: PathBuf) -> impl IntoView {
-    let img_data = create_resource(cx, move || path.clone(), backend::fetch_image);
+    let path_string = path.to_string_lossy().to_string();
+    let data = create_resource_with_initial_value(
+        cx,
+        move || path.clone(),
+        backend::fetch_image,
+        Some(
+            PLACEHOLDER_IMG_STRING
+                .get_or_init(|| {
+                    ImageData {
+                        content: PLACEHOLDER_IMG.to_vec(),
+                        mime: "image/png".to_string(),
+                    }
+                    .b64_content_string()
+                })
+                .to_string(),
+        ),
+    );
     let img = move || {
-        img_data.with(
-            cx,
-            |data| view! {cx, <><img src=data.b64_content_string() data-value=&data.path/><>},
-        )
+        data.read(cx)
+            .map(|img_data| view! {cx, <><img src=img_data data-value=&path_string/><>})
     };
     view! {cx, <>{img}</>}
 }
