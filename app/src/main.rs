@@ -1,6 +1,6 @@
 use self::config::Config;
+use self::gui::run_gui;
 use clap::Parser;
-use winit::event_loop::EventLoop;
 
 mod callback;
 mod config;
@@ -16,9 +16,7 @@ async fn main() -> anyhow::Result<()> {
     let cli_opts = Config::try_parse()?;
     dbg!(&cli_opts);
     let server = tokio::spawn(async move { server::run(cli_opts).await.unwrap().await.unwrap() });
-    let event_loop = EventLoop::new()?;
-    let mut gui = self::gui::GUIApp::default();
-    event_loop.run_app(&mut gui)?;
+    let _ = run_gui().await;
     server.abort();
     Ok(())
 }

@@ -1,48 +1,44 @@
-use winit::{
-    application::ApplicationHandler,
-    event::WindowEvent,
-    event_loop::ActiveEventLoop,
-    window::{Window, WindowId},
+use tao::{
+    dpi::{PhysicalSize, Size},
+    event::{Event, WindowEvent},
+    event_loop::{ControlFlow, EventLoop},
+    window::WindowBuilder,
 };
-#[cfg(target_os = "linux")]
-use winit_gtk::WindowExtUnix;
 use wry::WebViewBuilder;
-#[cfg(target_os = "linux")]
-use wry::WebViewBuilderExtUnix;
 
-#[derive(Default)]
-pub struct GUIApp {
-    window: Option<Window>,
-    webview: Option<wry::WebView>,
-}
+pub async fn run_gui() -> anyhow::Result<()> {
+    let event_loop = EventLoop::new();
+    let window = WindowBuilder::new()
+        .with_transparent(true)
+        .with_decorations(false)
+        .with_inner_size(Size::Physical(PhysicalSize::new(1050, 1000)))
+        .build(&event_loop)
+        .unwrap();
+    let builder = WebViewBuilder::new()
+        .with_transparent(true)
+        .with_url("http://localhost:5173");
 
-impl ApplicationHandler for GUIApp {
-    fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        let window_attrs = Window::default_attributes()
-            .with_transparent(true)
-            .with_decorations(false);
-        let window = event_loop.create_window(window_attrs).unwrap();
-        let builder = WebViewBuilder::new()
-            .with_transparent(true)
-            .with_url("http://localhost:5173");
+    #[cfg(any(target_os = "windows", target_os = "macos"))]
+    let _webview = builder.build(&window)?;
 
-        #[cfg(not(target_os = "linux"))]
-        let webview = builder.build(&window).unwrap();
-        #[cfg(target_os = "linux")]
-        let webview = builder.build_gtk(window.gtk_window()).unwrap();
+    #[cfg(target_os = "linux")]
+    let _webview = {
+        use tao::platform::unix::WindowExtUnix;
+        use wry::WebViewBuilderExtUnix;
+        let vbox = window.default_vbox().unwrap();
+        builder.build_gtk(vbox)?
+    };
 
-        self.window = Some(window);
-        self.webview = Some(webview);
-    }
+    event_loop.run(move |event, _, control_flow| {
+        *control_flow = ControlFlow::Wait;
 
-    fn window_event(
-        &mut self,
-        event_loop: &ActiveEventLoop,
-        _window_id: WindowId,
-        event: WindowEvent,
-    ) {
-        if let WindowEvent::CloseRequested = event {
-            event_loop.exit();
+        if let Event::WindowEvent {
+            event: WindowEvent::CloseRequested,
+            ..
+        } = event
+        {
+            *control_flow = ControlFlow::Exit;
         }
-    }
+    });
+    Ok(())
 }
