@@ -59,7 +59,6 @@
           packages = with pkgs;
             [
               toolchain
-              rust-analyzer-unwrapped
               svelte-language-server
             ]
             ++ buildDeps;
