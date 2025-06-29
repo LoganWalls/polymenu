@@ -8,6 +8,8 @@ keybinds.set("k+ctrl", Action.CursorPrevious);
 keybinds.set("l+ctrl", Action.ClearSelection);
 keybinds.set("enter", Action.Submit);
 keybinds.set("escape", Action.Close);
+keybinds.set("d+ctrl", Action.Close);
+keybinds.set("c+ctrl", Action.Close);
 
 function eventToKey(event: KeyboardEvent): string {
   const result = [event.key.toLowerCase()];
