@@ -14,10 +14,13 @@ pub struct GUIApp {
 
 impl ApplicationHandler for GUIApp {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        let window = event_loop
-            .create_window(Window::default_attributes().with_transparent(true))
-            .unwrap();
-        let builder = WebViewBuilder::new().with_url("http://localhost:5173");
+        let window_attrs = Window::default_attributes()
+            .with_transparent(true)
+            .with_decorations(false);
+        let window = event_loop.create_window(window_attrs).unwrap();
+        let builder = WebViewBuilder::new()
+            .with_transparent(true)
+            .with_url("http://localhost:5173");
 
         #[cfg(not(target_os = "linux"))]
         let webview = builder.build(&window).unwrap();

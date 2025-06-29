@@ -8,13 +8,13 @@
   appState.updateItems("");
 </script>
 
-<main class="text-xl bg-transparent dark:bg-black dark:text-white">
+<main class="text-xl bg-transparent dark:text-white">
   <div
-    class="h-screen w-lg rounded-xl flex flex-col items-center gap-5 bg-gray-200 dark:bg-gray-900"
+    class="max-h-screen w-lg rounded-xl flex flex-col items-center gap-5 bg-gray-200/80 dark:bg-gray-900/80"
   >
     <!-- svelte-ignore a11y_autofocus -->
     <label
-      class="w-full p-0 h-14 border-b-1 border-b-black dark:border-b-white align-middle"
+      class="w-full p-0 h-14 border-b-1 border-b-gray-600 dark:border-b-gray-300 align-middle"
       for="search"
     >
       <SearchIcon />
