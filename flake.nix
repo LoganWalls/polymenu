@@ -34,6 +34,7 @@
           [nodePackages.pnpm nodejs]
           ++ lib.optionals stdenv.isLinux [
             pkg-config
+            mesa
             webkitgtk_4_1
             libxkbcommon
             xorg.libX11
