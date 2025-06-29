@@ -4,7 +4,11 @@ use winit::{
     event_loop::ActiveEventLoop,
     window::{Window, WindowId},
 };
+#[cfg(target_os = "linux")]
+use winit_gtk::WindowExtUnix;
 use wry::WebViewBuilder;
+#[cfg(target_os = "linux")]
+use wry::WebViewBuilderExtUnix;
 
 #[derive(Default)]
 pub struct GUIApp {
