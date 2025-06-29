@@ -1,0 +1,7 @@
+.direnv
+.envrc
+/target
+/result
+web/node_modules/
+web/dist/
+
