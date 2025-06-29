@@ -35,6 +35,11 @@
           ++ lib.optionals stdenv.isLinux [
             pkg-config
             webkitgtk_4_1
+            libxkbcommon
+            xorg.libX11
+            xorg.libXcursor
+            xorg.libxcb
+            xorg.libXi
           ]
           ++ lib.optionals stdenv.isDarwin [
             libiconv
