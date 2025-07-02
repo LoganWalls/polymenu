@@ -1,0 +1,33 @@
+# Specify to read items from a file instead of stdin
+# file = "path/to/your/file"
+
+# Specify what format the input will come in
+# format = "csv"
+
+# If format is headless_csv, specify the column names
+# columns = ["key", "value"]
+
+
+# Options specific to this UI
+[options]
+# Prompt to be displayed as a placeholder in the text input box
+prompt = ""
+
+# Initial value for the text input box
+query = ""
+
+# How to treat case-sensitivity
+case = "smart"
+
+# Maximum number of items that can be selected
+max = 1
+
+# Maximum number of items that can be displayed at once
+max_visible = 10
+
+
+# Associate scripts with handles
+[commands]
+say_hello.command = ["echo", "hello"]
+say_bye.command = ["echo", "bye"]
+say_anything.command = ["echo", "$message"]

@@ -40,5 +40,4 @@ pub async fn run_gui() -> anyhow::Result<()> {
             *control_flow = ControlFlow::Exit;
         }
     });
-    Ok(())
 }

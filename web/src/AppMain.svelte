@@ -1,11 +1,11 @@
 <script lang="ts">
   import SearchIcon from "./lib/SearchIcon.svelte";
-  import "./keybinds.ts";
-  import { appState } from "./state.svelte";
-  import Item from "./lib/Item.svelte";
-
+  import keymap from "./keymap.svelte";
+  import { app } from "./app.svelte";
   let input: HTMLInputElement;
-  appState.updateItems("");
+  keymap.set("enter", () => app.print([input.value]));
+  keymap.set("tab", () => app.print(["hi!", "wowowoowow"]));
+  keymap.set("escape", () => app.close());
 </script>
 
 <main class="text-xl bg-transparent dark:text-white">
@@ -25,21 +25,18 @@
         bind:this={input}
         autocomplete="off"
         onfocusin={(e: FocusEvent) => (e.target as HTMLInputElement).select()}
-        oninput={(e) => {
-          appState.updateItems((e.target as HTMLInputElement).value);
-        }}
         autofocus
       />
     </label>
     <div class="flex flex-col items-center p-1 gap-2 h-full overflow-y-scroll">
-      {#each appState.items as item, i}
-        <Item
-          index={i}
-          data={item}
-          selected={appState.selectedIds.includes(item.id)}
-          underCursor={i == appState.cursorIndex}
-        />
-      {/each}
+      <!-- {#each app.items as item, i} -->
+      <!--   <Item -->
+      <!--     index={i} -->
+      <!--     data={item} -->
+      <!--     selected={app.selectedIds.includes(item.id)} -->
+      <!--     underCursor={i == app.cursorIndex} -->
+      <!--   /> -->
+      <!-- {/each} -->
     </div>
   </div>
 </main>

@@ -1,4 +1,4 @@
-import type { ItemData } from "./state";
+import type { ItemData } from "./app";
 
 export enum Action {
   CursorPrevious,
