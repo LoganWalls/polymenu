@@ -14,9 +14,8 @@ mod server;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let cli_opts = Config::try_parse()?;
-    dbg!(&cli_opts);
     let server = tokio::spawn(async move { server::run(cli_opts).await.unwrap().await.unwrap() });
-    let _ = run_gui().await;
+    run_gui().await?;
     server.abort();
     Ok(())
 }
