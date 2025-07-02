@@ -1,6 +1,9 @@
-use crate::callback::Callback;
-use crate::config::{Config, ItemFormat};
+use serde_json::Map;
+
+use crate::command::{Command, IOFormat};
+use crate::config::Config;
 use crate::item::Item;
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use std::path::PathBuf;
@@ -9,13 +12,13 @@ use std::path::PathBuf;
 pub enum InputSource {
     StdIn,
     File(PathBuf),
-    Callback(Callback),
+    Callback(Command),
 }
 
 #[derive(Debug)]
 pub struct ItemSource {
     input: InputSource,
-    format: ItemFormat,
+    format: IOFormat,
     headers: Option<Vec<String>>,
 }
 
@@ -29,18 +32,19 @@ impl ItemSource {
                 .and_then(|e| e.to_str())
             {
                 match extension {
-                    "csv" => ItemFormat::Csv,
-                    "json" => ItemFormat::Json,
-                    _ => ItemFormat::default(),
+                    "csv" => IOFormat::Csv,
+                    "json" => IOFormat::Json,
+                    "raw" => IOFormat::Raw,
+                    _ => IOFormat::HeadlessCsv,
                 }
             } else {
-                ItemFormat::default()
+                IOFormat::default()
             }
         });
-        let input = match (&cli_args.file, &cli_args.callback) {
+        let input = match (&cli_args.file, &cli_args.input_script) {
             (None, None) => InputSource::StdIn,
             (Some(path), _) => InputSource::File(path.to_path_buf()),
-            (None, Some(args)) => InputSource::Callback(Callback::new(args.to_vec())),
+            (None, Some(args)) => InputSource::Callback(Command::new(args.to_vec(), format)),
         };
         Self {
             input,
@@ -49,22 +53,27 @@ impl ItemSource {
         }
     }
 
-    pub fn get_items(&mut self, query: &str) -> anyhow::Result<Vec<Item>> {
-        let source: Box<dyn io::Read> = match &mut self.input {
+    pub fn get_items(&mut self, args: HashMap<String, String>) -> anyhow::Result<Vec<Item>> {
+        let mut source: Box<dyn io::Read> = match &mut self.input {
             InputSource::StdIn => Box::new(io::stdin()),
             InputSource::File(path) => Box::new(File::open(path)?),
-            InputSource::Callback(callback) => Box::new(callback.call(query)?),
+            InputSource::Callback(callback) => Box::new(callback.call(args)?),
         };
         match self.format {
-            ItemFormat::HeadlessCsv => read_csv(
+            IOFormat::HeadlessCsv => read_csv(
                 source,
                 false,
                 self.headers
                     .clone()
                     .or_else(|| Some(vec!["key".into(), "value".into()])),
             ),
-            ItemFormat::Csv => read_csv(source, true, self.headers.clone()),
-            ItemFormat::Json => read_json(source),
+            IOFormat::Csv => read_csv(source, true, self.headers.clone()),
+            IOFormat::Json => read_json(source),
+            IOFormat::Raw => {
+                let mut buf = String::new();
+                source.read_to_string(&mut buf);
+                Ok(vec![Item::new(0, buf, Map::new())])
+            }
         }
     }
 }

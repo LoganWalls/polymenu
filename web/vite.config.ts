@@ -8,8 +8,10 @@ const devUrl = 'http://localhost:4000';
 export default defineConfig({
   server: {
     proxy: {
-      '/fuzzy-match': devUrl,
-      '/submit': devUrl,
+      "/options": devUrl,
+      "/command": devUrl,
+      "/print": devUrl,
+      "/close": devUrl,
     }
   },
   plugins: [svelte(), tailwindcss()],
