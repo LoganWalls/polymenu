@@ -9,8 +9,9 @@ export default defineConfig({
   server: {
     proxy: {
       "/options": devUrl,
-      "/command": devUrl,
+      "/input": devUrl,
       "/print": devUrl,
+      "/command": devUrl,
       "/close": devUrl,
     }
   },
