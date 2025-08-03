@@ -2,9 +2,39 @@
   import SearchIcon from "./lib/SearchIcon.svelte";
   import keymap from "./keymap.svelte";
   import { app } from "./app.svelte";
-  let input: HTMLInputElement;
-  keymap.set("enter", () => app.print([input.value]));
-  keymap.set("tab", () => app.print(["hi!", "wowowoowow"]));
+  import util from "./util";
+
+  import Fuse from "fuse.js";
+  import Item, { type ItemData } from "./lib/Item.svelte";
+
+  let selectedItems: ItemData[] = $state([]);
+  let cursorIndex = $state(0);
+  let items: ItemData[] = $state([]);
+  let allItems: ItemData[] = $state([]);
+  let fusePromise = (async () => {
+    allItems = await app.input<ItemData>();
+    items = allItems;
+    return new Fuse(items, { keys: ["key"] });
+  })();
+
+  keymap.set("enter", () => {
+    if (selectedItems.length == 0) {
+      selectedItems.push(items[cursorIndex]);
+    }
+    app.print(selectedItems.map((item) => item.key));
+  });
+  keymap.set("tab", () => {
+    selectedItems = util.toggleSet(items[cursorIndex], selectedItems);
+  });
+  keymap.set("ctrl+j", () => {
+    cursorIndex = util.wrappingShift(cursorIndex, 1, 0, items.length - 1);
+  });
+  keymap.set("ctrl+k", () => {
+    cursorIndex = util.wrappingShift(cursorIndex, -1, 0, items.length - 1);
+  });
+  keymap.set("ctrl+l", () => {
+    selectedItems = [];
+  });
   keymap.set("escape", () => app.close());
 </script>
 
@@ -12,31 +42,46 @@
   <div
     class="max-h-screen w-lg rounded-xl flex flex-col items-center gap-5 bg-gray-200/80 dark:bg-gray-900/80"
   >
-    <!-- svelte-ignore a11y_autofocus -->
-    <label
-      class="w-full p-0 h-14 border-b-1 border-b-gray-600 dark:border-b-gray-300 align-middle"
-      for="search"
-    >
-      <SearchIcon />
-      <input
-        name="search"
-        class="w-5/6 h-full p-0 text-3xl outline-none"
-        type="text"
-        bind:this={input}
-        autocomplete="off"
-        onfocusin={(e: FocusEvent) => (e.target as HTMLInputElement).select()}
-        autofocus
-      />
-    </label>
-    <div class="flex flex-col items-center p-1 gap-2 h-full overflow-y-scroll">
-      <!-- {#each app.items as item, i} -->
-      <!--   <Item -->
-      <!--     index={i} -->
-      <!--     data={item} -->
-      <!--     selected={app.selectedIds.includes(item.id)} -->
-      <!--     underCursor={i == app.cursorIndex} -->
-      <!--   /> -->
-      <!-- {/each} -->
-    </div>
+    {#await fusePromise}
+      <p>Loading...</p>
+    {:then fuse}
+      <!-- svelte-ignore a11y_autofocus -->
+      <label
+        class="w-full p-0 h-14 border-b-1 border-b-gray-600 dark:border-b-gray-300 align-middle"
+        for="search"
+      >
+        <SearchIcon />
+        <input
+          name="search"
+          class="w-5/6 h-full p-0 text-3xl outline-none"
+          type="text"
+          autocomplete="off"
+          onfocusin={(e: FocusEvent) => (e.target as HTMLInputElement).select()}
+          oninput={(e: Event) => {
+            const query = (e.target as HTMLInputElement).value;
+            if (query) {
+              items = fuse.search(query).map((r) => r.item);
+            } else {
+              items = allItems;
+            }
+          }}
+          autofocus
+        />
+      </label>
+      <div
+        class="flex flex-col items-center p-1 gap-2 h-full overflow-y-scroll"
+      >
+        {#each items as item, i}
+          <Item
+            index={i}
+            data={item}
+            selected={selectedItems.includes(item)}
+            underCursor={i == cursorIndex}
+          />
+        {/each}
+      </div>
+    {:catch error}
+      <p>Something went wrong: {error.message}</p>
+    {/await}
   </div>
 </main>

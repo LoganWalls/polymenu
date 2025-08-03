@@ -13,7 +13,7 @@ class App {
    * depending on how the program was called from the CLI).
    * @returns Promise that resolves to the json values that were passed to the program
    */
-  input = async () => {
+  input = async <T>(): Promise<T> => {
     const request = new Request("input", {
       method: "GET",
       headers: {
@@ -24,7 +24,7 @@ class App {
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
-    return response.json()
+    return await response.json()
   }
 
   /**
@@ -64,7 +64,7 @@ class App {
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
-    return response.json()
+    return await response.json()
   }
 
   /**
