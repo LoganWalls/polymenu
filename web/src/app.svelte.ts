@@ -13,7 +13,7 @@ class App {
    * depending on how the program was called from the CLI).
    * @returns Promise that resolves to the json values that were passed to the program
    */
-  input = async <T>(): Promise<T> => {
+  input = async <T>(): Promise<T[]> => {
     const request = new Request("input", {
       method: "GET",
       headers: {
