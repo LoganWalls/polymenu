@@ -1,12 +1,35 @@
 use anyhow::Context;
+use clap::ValueEnum;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::command::{Command, IOFormat};
+use crate::command::Command;
 use crate::config::Config;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use std::path::PathBuf;
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, ValueEnum)]
+#[serde(rename_all = "snake_case")]
+pub enum IOFormat {
+    /// CSV without header (default; will be read as an array of strings per row)
+    HeadlessCsv,
+    /// CSV with header (will be converted to JSON objects for each row)
+    Csv,
+    /// JSON
+    Json,
+    /// JSON lines
+    JsonLines,
+    /// Raw (will be read as a string)
+    Raw,
+}
+
+impl Default for IOFormat {
+    fn default() -> Self {
+        Self::HeadlessCsv
+    }
+}
 
 #[derive(Debug, Clone)]
 pub enum DataSourceKind {
@@ -42,13 +65,7 @@ impl DataParser {
             }
         };
         match self.format {
-            IOFormat::HeadlessCsv => read_csv(
-                source,
-                false,
-                self.headers
-                    .clone()
-                    .or_else(|| Some(vec!["key".into(), "value".into()])),
-            ),
+            IOFormat::HeadlessCsv => read_csv(source, false, self.headers.clone()),
             IOFormat::Csv => read_csv(source, true, self.headers.clone()),
             IOFormat::Json => read_json(source),
             IOFormat::JsonLines => read_jsonlines(source),
@@ -80,7 +97,7 @@ impl From<Config> for DataParser {
                     _ => IOFormat::HeadlessCsv,
                 }
             } else {
-                IOFormat::default()
+                IOFormat::HeadlessCsv
             }
         });
         let kind = match (&value.file, &value.input_script) {
@@ -91,7 +108,7 @@ impl From<Config> for DataParser {
         Self {
             kind,
             format,
-            headers: value.columns.clone(),
+            headers: value.headers,
         }
     }
 }
@@ -101,18 +118,26 @@ pub fn read_csv(
     has_headers: bool,
     user_headers: Option<Vec<String>>,
 ) -> anyhow::Result<Vec<Value>> {
+    let headless = !has_headers && user_headers.is_none();
     let mut rdr = csv::ReaderBuilder::new()
-        .has_headers(has_headers)
+        .has_headers(!headless)
         .from_reader(source);
     if let Some(h) = user_headers {
         rdr.set_headers(h.into());
     }
-    let mut result = Vec::new();
-    for data in rdr.into_deserialize() {
-        let data: serde_json::Map<String, serde_json::Value> = data?;
-        result.push(Value::Object(data));
+    if headless {
+        rdr.into_deserialize::<Vec<String>>()
+            .map(|result| {
+                result
+                    .context("failed to parse csv")
+                    .map(|values| Value::Array(values.into_iter().map(Value::String).collect()))
+            })
+            .collect()
+    } else {
+        rdr.into_deserialize::<serde_json::Map<String, serde_json::Value>>()
+            .map(|result| result.context("failed to parse csv").map(Value::Object))
+            .collect()
     }
-    Ok(result)
 }
 
 pub fn read_jsonlines(source: impl io::Read) -> anyhow::Result<Vec<Value>> {

@@ -1,10 +1,10 @@
 <script lang="ts">
-  import SearchIcon from "./lib/SearchIcon.svelte";
   import keymap from "./keymap.svelte";
   import { app } from "./app.svelte";
   import util from "./util";
 
   import Fuse from "fuse.js";
+  import SearchIcon from "./lib/SearchIcon.svelte";
   import Item, { type ItemData } from "./lib/Item.svelte";
 
   let selectedItems: ItemData[] = $state([]);
@@ -12,7 +12,17 @@
   let items: ItemData[] = $state([]);
   let allItems: ItemData[] = $state([]);
   let fusePromise = (async () => {
-    allItems = await app.input<ItemData>();
+    // Get inputs from the CLI
+    const inputValues = await app.input<ItemData | string[]>();
+    // If they are not objects (e.g. if they are headless CSV rows),
+    // assume the first item in each row is the key
+    if (inputValues.length > 0 && Array.isArray(inputValues[0])) {
+      for (let i = 0; i < inputValues.length; i++) {
+        const row = inputValues[i] as string[];
+        inputValues[i] = { key: row[0] };
+      }
+    }
+    allItems = inputValues as ItemData[];
     items = allItems;
     return new Fuse(items, { keys: ["key"] });
   })();
@@ -35,7 +45,20 @@
   keymap.set("ctrl+l", () => {
     selectedItems = [];
   });
-  keymap.set("escape", () => app.close());
+  keymap.set("ctrl+t", () =>
+    app.runCommand("get_countries").then((countries: any[]) => {
+      console.log(countries);
+      countries.forEach((c) => {
+        console.log(c.key);
+        app.print([c.key]);
+      });
+    }),
+  );
+  keymap.set("ctrl+h", () =>
+    app.runCommand("say_anything", { message: "Watermellon!" }).then(app.print),
+  );
+  keymap.set("escape", app.close);
+  keymap.set("ctrl+d", app.close);
 </script>
 
 <main class="text-xl bg-transparent dark:text-white">

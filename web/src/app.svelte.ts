@@ -1,10 +1,15 @@
+type JsonPrimitive = string | number | boolean | null;
+type JsonValue = JsonPrimitive | JsonObject | JsonArray;
+interface JsonObject { [key: string]: JsonValue }
+interface JsonArray extends Array<JsonValue> { }
+
 class App {
   /**
    * Options passed to the program at startup 
    */
-  options: Record<string, any>
+  options: Record<string, JsonValue>
 
-  constructor(options: Record<string, any>) {
+  constructor(options: Record<string, JsonValue>) {
     this.options = options;
   }
 
@@ -28,11 +33,16 @@ class App {
   }
 
   /**
-   * Prints values to STDOUT, each on a separate line.
-   * @param values The array of strings to print.
+   * Prints `values` to STDOUT, each on a separate line.
+   * @param values An array of (JSON-serializable) values to print.
    * @returns Promise that resolves when printing is done.
    */
-  print = async (values: string[]) => {
+  print = async (values: JsonValue | JsonValue[]) => {
+    // Print endpoint always expects an array at the root
+    if (!Array.isArray(values)) {
+      values = [values]
+    }
+
     const request = new Request("print", {
       method: "PUT",
       headers: {
@@ -52,7 +62,7 @@ class App {
    * @param args The arguments to be passed to the command
    * @returns Promise that resolves to the (json) output of the command
    */
-  runCommand = async (name: string, args: Record<string, string>) => {
+  runCommand = async (name: string, args: Record<string, string> = {}) => {
     const request = new Request(`command/${name}`, {
       method: "POST",
       headers: {

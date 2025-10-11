@@ -8,7 +8,7 @@
 # columns = ["key", "value"]
 
 
-# Options specific to this UI
+# Define options specific to this app that can be overriden at runtime
 [options]
 # Prompt to be displayed as a placeholder in the text input box
 prompt = ""
@@ -26,8 +26,17 @@ max = 1
 max_visible = 10
 
 
-# Associate scripts with handles
-[commands]
-say_hello.command = ["echo", "hello"]
-say_bye.command = ["echo", "bye"]
-say_anything.command = ["echo", "$message"]
+# Define CLI commands that you can call from inside your app
+[commands.say_hello]
+command = ["echo", "hello"]
+
+[commands.say_anything]
+# output_format = "raw" # Parse the output of your command. json, jsonlines, csv, headless_csv (defaults to raw)
+command = [
+  "echo",
+  "$message", # Use `$argument_name` to reference arguments that you will pass from your app 
+]
+
+[commands.get_countries]
+output_format = "json"
+command = ["cat", "web/countries.json"]

@@ -4,7 +4,8 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use crate::command::{Command, IOFormat};
+use crate::command::Command;
+use crate::io::IOFormat;
 
 use polymenu_derive::UpdateFromOther;
 
@@ -30,9 +31,9 @@ pub struct Config {
 
     /// Name of each field (only used when format is headless-csv)
     #[arg(long, value_name = "COLUMN NAMES",  num_args = 1..)]
-    pub columns: Option<Vec<String>>,
+    pub headers: Option<Vec<String>>,
 
-    /// Options to be passed to the app
+    /// Options to be passed to the app at runtime
     #[clap(skip)]
     pub options: HashMap<String, Value>,
 

@@ -1,28 +1,8 @@
-use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::io::Cursor;
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, ValueEnum)]
-#[serde(rename_all = "snake_case")]
-pub enum IOFormat {
-    /// CSV without header (will be converted to JSON)
-    HeadlessCsv,
-    /// CSV with header (will be converted to JSON)
-    Csv,
-    /// JSON
-    Json,
-    /// JSON lines
-    JsonLines,
-    /// Raw (will be read as a string)
-    Raw,
-}
-
-impl Default for IOFormat {
-    fn default() -> Self {
-        Self::Raw
-    }
-}
+use crate::io::IOFormat;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct Command {
