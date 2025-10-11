@@ -34,8 +34,12 @@ impl DataParser {
     pub fn parse(&self, args: HashMap<String, String>) -> anyhow::Result<Vec<Value>> {
         let mut source: Box<dyn io::Read> = match self.kind.clone() {
             DataSourceKind::StdIn => Box::new(io::stdin()),
-            DataSourceKind::File(path) => Box::new(File::open(path)?),
-            DataSourceKind::Command(callback) => Box::new(callback.call(args)?),
+            DataSourceKind::File(path) => {
+                Box::new(File::open(path).context("failed to open file")?)
+            }
+            DataSourceKind::Command(callback) => {
+                Box::new(callback.call(args).context("failed to execute callback")?)
+            }
         };
         match self.format {
             IOFormat::HeadlessCsv => read_csv(
@@ -47,9 +51,12 @@ impl DataParser {
             ),
             IOFormat::Csv => read_csv(source, true, self.headers.clone()),
             IOFormat::Json => read_json(source),
+            IOFormat::JsonLines => read_jsonlines(source),
             IOFormat::Raw => {
                 let mut buf = String::new();
-                source.read_to_string(&mut buf)?;
+                source
+                    .read_to_string(&mut buf)
+                    .context("failed to read raw input")?;
                 Ok(vec![Value::String(buf)])
             }
         }
@@ -68,6 +75,7 @@ impl From<Config> for DataParser {
                 match extension {
                     "csv" => IOFormat::Csv,
                     "json" => IOFormat::Json,
+                    "jsonl" => IOFormat::JsonLines,
                     "raw" => IOFormat::Raw,
                     _ => IOFormat::HeadlessCsv,
                 }
@@ -107,12 +115,18 @@ pub fn read_csv(
     Ok(result)
 }
 
-pub fn read_json(source: impl io::Read) -> anyhow::Result<Vec<Value>> {
+pub fn read_jsonlines(source: impl io::Read) -> anyhow::Result<Vec<Value>> {
     BufReader::new(source)
         .lines()
         .map(|line| {
-            line.context("failed to read line")
-                .and_then(|l| serde_json::from_str(&l).context("failed to parse json"))
+            line.context("failed to read line").and_then(|l| {
+                serde_json::from_str(&l)
+                    .with_context(|| format!("failed to parse json from string:\n\"{}\"", &l))
+            })
         })
         .collect()
+}
+
+pub fn read_json(source: impl io::Read) -> anyhow::Result<Vec<Value>> {
+    serde_json::from_reader(source).context("failed to parse json")
 }

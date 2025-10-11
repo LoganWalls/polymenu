@@ -10,8 +10,10 @@ pub enum IOFormat {
     HeadlessCsv,
     /// CSV with header (will be converted to JSON)
     Csv,
-    /// JSON lines
+    /// JSON
     Json,
+    /// JSON lines
+    JsonLines,
     /// Raw (will be read as a string)
     Raw,
 }
