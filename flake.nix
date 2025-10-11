@@ -1,5 +1,5 @@
 {
-  description = "A minimal reference manager";
+  description = "A hyper customizable cross-platform tool for building ephemeral widgets";
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     rust-overlay = {
