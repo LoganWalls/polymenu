@@ -6,7 +6,7 @@ use tao::{
 };
 use wry::WebViewBuilder;
 
-pub async fn run_gui() -> anyhow::Result<()> {
+pub async fn run_gui(port: &str) -> anyhow::Result<()> {
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new()
         .with_transparent(true)
@@ -16,7 +16,7 @@ pub async fn run_gui() -> anyhow::Result<()> {
         .unwrap();
     let builder = WebViewBuilder::new()
         .with_transparent(true)
-        .with_url("http://localhost:5173");
+        .with_url(format!("http://localhost:{port}"));
 
     #[cfg(any(target_os = "windows", target_os = "macos"))]
     let _webview = builder.build(&window)?;

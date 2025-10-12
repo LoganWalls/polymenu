@@ -18,8 +18,9 @@ async fn main() -> anyhow::Result<()> {
     );
     let mut config: Config = toml::from_str(config_str)?;
     config.update_from_other(cli_opts);
+    let port = config.port.clone();
     let server = tokio::spawn(async move { server::run(config).await.unwrap().await.unwrap() });
-    run_gui().await?;
+    run_gui(&port).await?;
     server.abort();
     Ok(())
 }

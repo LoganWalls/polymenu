@@ -41,4 +41,12 @@ pub struct Config {
     #[clap(skip)]
     pub commands: HashMap<String, Command>,
 
+    /// The port that the server should bind to
+    #[arg(short, long, value_name = "PORT", default_value_t = default_port())]
+    #[serde(default = "default_port")]
+    pub port: String,
+}
+
+fn default_port() -> String {
+    "5173".to_string()
 }

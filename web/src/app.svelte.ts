@@ -3,6 +3,8 @@ type JsonValue = JsonPrimitive | JsonObject | JsonArray;
 interface JsonObject { [key: string]: JsonValue }
 interface JsonArray extends Array<JsonValue> { }
 
+const apiRoutePrefix = "api"
+
 class App {
   /**
    * Options passed to the program at startup 
@@ -19,7 +21,7 @@ class App {
    * @returns Promise that resolves to the json values that were passed to the program
    */
   input = async <T>(): Promise<T[]> => {
-    const request = new Request("input", {
+    const request = new Request(`${apiRoutePrefix}/input`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -43,7 +45,7 @@ class App {
       values = [values]
     }
 
-    const request = new Request("print", {
+    const request = new Request(`${apiRoutePrefix}/print`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -63,7 +65,7 @@ class App {
    * @returns Promise that resolves to the (json) output of the command
    */
   runCommand = async (name: string, args: Record<string, string> = {}) => {
-    const request = new Request(`command/${name}`, {
+    const request = new Request(`${apiRoutePrefix}/command/${name}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -83,7 +85,7 @@ class App {
    * (in practice, this will not resolve because the process will exit)
    */
   close = async () => {
-    const request = new Request("close", {
+    const request = new Request(`${apiRoutePrefix}/close`, {
       method: "PUT",
     });
     const response = await window.fetch(request);
@@ -93,16 +95,16 @@ class App {
   }
 }
 
-const request = new Request("options", {
+const optionsRequest = new Request(`${apiRoutePrefix}/options`, {
   method: "GET",
   headers: {
     "Content-Type": "application/json",
   },
 });
-const response = await window.fetch(request);
-if (!response.ok) {
-  throw new Error(`HTTP error! Status: ${response.status}`);
+const optionsResponse = await window.fetch(optionsRequest);
+if (!optionsResponse.ok) {
+  throw new Error(`HTTP error! Status: ${optionsResponse.status}`);
 }
-const options = await response.json();
+const options = await optionsResponse.json();
 
 export const app = new App(options);
