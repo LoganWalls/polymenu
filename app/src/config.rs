@@ -41,6 +41,16 @@ pub struct Config {
     #[clap(skip)]
     pub commands: HashMap<String, Command>,
 
+    /// Whether or not to use an opaque window (default is transparent)
+    #[arg(long)]
+    #[serde(default)]
+    pub opaque: bool,
+
+    /// Whether or not the window should have decorations
+    #[arg(long)]
+    #[serde(default)]
+    pub window_decorations: bool,
+
     /// The port that the server should bind to
     #[arg(short, long, value_name = "PORT", default_value_t = default_port())]
     #[serde(default = "default_port")]
