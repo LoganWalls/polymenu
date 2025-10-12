@@ -7,6 +7,8 @@
 # If format is headless_csv, specify the column names
 # columns = ["key", "value"]
 
+app_src = "web/"
+
 
 # Define options specific to this app that can be overriden at runtime
 [options]

@@ -39,10 +39,18 @@ pub async fn run(
         .with_env_filter(EnvFilter::from_default_env())
         .init();
 
-    let ui_src = "web/dist/";
+    let ui_src = {
+        let mut path = config.app_src.clone().expect(
+            "`app_src` must be provided either in your config file or as a CLI argument (neither was provided)"
+        );
+        path.push("dist");
+        path.into_os_string()
+            .into_string()
+            .expect("could not convert `app_src` to str")
+    };
     let url = config.server_url();
     let ui_service = get_service(
-        ServeDir::new(ui_src).not_found_service(ServeFile::new(format!("{ui_src}/index.html"))),
+        ServeDir::new(&ui_src).not_found_service(ServeFile::new(format!("{ui_src}/index.html"))),
     );
     let api_routes = Router::new()
         .route("/options", get(options))

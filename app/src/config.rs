@@ -21,6 +21,10 @@ pub struct Config {
     #[serde(skip)]
     pub config: Option<PathBuf>,
 
+    /// Path to your svelte project root for this app
+    #[arg(short, long, value_name = "FILE", value_hint = ValueHint::FilePath)]
+    pub app_src: Option<PathBuf>,
+
     /// Read items from a file instead of STDIN
     #[arg(short, long, value_name = "FILE", value_hint = ValueHint::FilePath)]
     pub file: Option<PathBuf>,
