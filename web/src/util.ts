@@ -1,10 +1,10 @@
 export function wrappingShift(v: number, shift: number, low: number, high: number): number {
   v += shift;
   if (v > high) {
-    v = low;
+    v = low + (v - high) - 1;
   }
   if (v < low) {
-    v = high;
+    v = high - (low - v) + 1;
   }
   return v
 }
