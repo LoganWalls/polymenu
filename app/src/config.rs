@@ -45,8 +45,40 @@ pub struct Config {
     #[arg(short, long, value_name = "PORT", default_value_t = default_port())]
     #[serde(default = "default_port")]
     pub port: String,
+
+    /// Launch in development mode
+    #[arg(long)]
+    #[serde(skip)]
+    pub develop: bool,
+
+    /// The port that the front end development server should bind to
+    #[arg(short, long, value_name = "PORT", default_value_t = default_dev_server_port())]
+    #[serde(default = "default_dev_server_port")]
+    pub dev_server_port: String,
+
+    /// The command to launch the front end development server
+    #[clap(skip)]
+    #[serde(default = "default_develop_command")]
+    pub develop_command: Vec<String>,
+}
+
+impl Config {
+    pub fn server_url(&self) -> String {
+        format!("0.0.0.0:{}", &self.port)
+    }
 }
 
 fn default_port() -> String {
-    "5173".to_string()
+    "7777".to_string()
+}
+
+fn default_dev_server_port() -> String {
+    "7778".to_string()
+}
+
+fn default_develop_command() -> Vec<String> {
+    vec!["pnpm", "run", "dev"]
+        .into_iter()
+        .map(String::from)
+        .collect()
 }

@@ -1,3 +1,8 @@
+use std::path::PathBuf;
+use std::str::FromStr;
+use std::thread::sleep;
+use std::time::Duration;
+
 use self::config::{Config, UpdateFromOther};
 use self::gui::run_gui;
 use clap::Parser;
@@ -18,9 +23,37 @@ async fn main() -> anyhow::Result<()> {
     );
     let mut config: Config = toml::from_str(config_str)?;
     config.update_from_other(cli_opts);
-    let port = config.port.clone();
-    let server = tokio::spawn(async move { server::run(config).await.unwrap().await.unwrap() });
-    run_gui(&port).await?;
+
+    let server = {
+        let server_config = config.clone();
+        tokio::spawn(async move { server::run(server_config).await.unwrap().await.unwrap() })
+    };
+
+    let mut dev_server = None;
+    if config.develop {
+        let dev_command = &config.develop_command;
+        dev_server = Some(
+            tokio::process::Command::new(
+                dev_command
+                    .first()
+                    .expect("develop command should have at least one part"),
+            )
+            .current_dir(PathBuf::from_str("web/")?)
+            .env("API_PORT", &config.port)
+            .env("DEV_SERVER_PORT", &config.dev_server_port)
+            .args(dev_command.iter().skip(1))
+            .kill_on_drop(true)
+            .spawn()
+            .unwrap(),
+        );
+        // TODO: find a better solution for letting the dev server start before gui queries it.
+        sleep(Duration::from_millis(500));
+    }
+
+    run_gui(&config).await?;
     server.abort();
+    if let Some(s) = &mut dev_server {
+        s.kill().await?
+    }
     Ok(())
 }

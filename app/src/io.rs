@@ -1,5 +1,6 @@
 use anyhow::Context;
 use clap::ValueEnum;
+use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -7,8 +8,14 @@ use crate::command::Command;
 use crate::config::Config;
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::{self, BufRead, BufReader};
+use std::io::{self, BufRead, BufReader, Cursor, Read};
 use std::path::PathBuf;
+
+static STDIN_CONTENT: Lazy<String> = Lazy::new(|| {
+    let mut s = String::new();
+    io::stdin().read_to_string(&mut s).unwrap();
+    s
+});
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, ValueEnum)]
 #[serde(rename_all = "snake_case")]
@@ -56,7 +63,7 @@ impl DataParser {
 
     pub fn parse(&self, args: HashMap<String, String>) -> anyhow::Result<Vec<Value>> {
         let mut source: Box<dyn io::Read> = match self.kind.clone() {
-            DataSourceKind::StdIn => Box::new(io::stdin()),
+            DataSourceKind::StdIn => Box::new(Cursor::new(STDIN_CONTENT.as_bytes())),
             DataSourceKind::File(path) => {
                 Box::new(File::open(path).context("failed to open file")?)
             }

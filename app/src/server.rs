@@ -12,7 +12,9 @@ use serde_json::Value;
 use tower_http::{
     compression::CompressionLayer,
     services::{ServeDir, ServeFile},
+    trace::TraceLayer,
 };
+use tracing_subscriber::EnvFilter;
 
 use crate::{
     config::Config,
@@ -33,9 +35,12 @@ impl AppState {
 pub async fn run(
     config: Config,
 ) -> anyhow::Result<axum::serve::Serve<tokio::net::TcpListener, Router, Router>> {
-    let ui_src = "web/dist";
-    let url = format!("0.0.0.0:{}", &config.port);
+    tracing_subscriber::fmt()
+        .with_env_filter(EnvFilter::from_default_env())
+        .init();
 
+    let ui_src = "web/dist/";
+    let url = config.server_url();
     let ui_service = get_service(
         ServeDir::new(ui_src).not_found_service(ServeFile::new(format!("{ui_src}/index.html"))),
     );
@@ -49,6 +54,7 @@ pub async fn run(
         .nest("/api", api_routes)
         .fallback_service(ui_service)
         .with_state(AppState::new(config))
+        .layer(TraceLayer::new_for_http())
         .layer(CompressionLayer::new());
 
     let listener = tokio::net::TcpListener::bind(url).await.unwrap();

@@ -6,7 +6,9 @@ use tao::{
 };
 use wry::WebViewBuilder;
 
-pub async fn run_gui(port: &str) -> anyhow::Result<()> {
+use crate::config::Config;
+
+pub async fn run_gui(config: &Config) -> anyhow::Result<()> {
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new()
         .with_transparent(true)
@@ -16,7 +18,15 @@ pub async fn run_gui(port: &str) -> anyhow::Result<()> {
         .unwrap();
     let builder = WebViewBuilder::new()
         .with_transparent(true)
-        .with_url(format!("http://localhost:{port}"));
+        .with_url(format!(
+            "http://localhost:{}",
+            if config.develop {
+                &config.dev_server_port
+            } else {
+                &config.port
+            }
+        ))
+        .with_devtools(config.develop);
 
     #[cfg(any(target_os = "windows", target_os = "macos"))]
     let _webview = builder.build(&window)?;
