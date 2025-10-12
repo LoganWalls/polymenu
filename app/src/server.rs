@@ -1,4 +1,4 @@
-use std::{collections::HashMap, convert::Infallible};
+use std::collections::HashMap;
 
 use anyhow::Context;
 use axum::{
@@ -38,10 +38,7 @@ pub async fn run(
 
     let ui_service = get_service(
         ServeDir::new(ui_src).not_found_service(ServeFile::new(format!("{ui_src}/index.html"))),
-    )
-    .handle_error(async move |err| -> Infallible {
-        panic!("Static file serving failed: {err}");
-    });
+    );
     let api_routes = Router::new()
         .route("/options", get(options))
         .route("/input", get(read_input))
