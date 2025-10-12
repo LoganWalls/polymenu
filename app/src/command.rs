@@ -12,16 +12,6 @@ pub struct Command {
 }
 
 impl Command {
-    pub fn new(command: Vec<String>, output_format: IOFormat) -> Self {
-        if command.is_empty() {
-            panic!("script command should have at least one part")
-        }
-        Self {
-            command,
-            output_format,
-        }
-    }
-
     pub fn call(&self, args: HashMap<String, String>) -> anyhow::Result<Cursor<Vec<u8>>> {
         let output = std::process::Command::new(
             self.command

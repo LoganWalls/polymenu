@@ -100,10 +100,10 @@ impl From<Config> for DataParser {
                 IOFormat::HeadlessCsv
             }
         });
-        let kind = match (&value.file, &value.input_script) {
-            (None, None) => DataSourceKind::StdIn,
-            (Some(path), _) => DataSourceKind::File(path.to_path_buf()),
-            (None, Some(args)) => DataSourceKind::Command(Command::new(args.to_vec(), format)),
+        let kind = if let Some(path) = &value.file {
+            DataSourceKind::File(path.to_path_buf())
+        } else {
+            DataSourceKind::StdIn
         };
         Self {
             kind,
