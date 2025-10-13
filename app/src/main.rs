@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-use std::str::FromStr;
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -32,20 +30,23 @@ async fn main() -> anyhow::Result<()> {
     let mut dev_server = None;
     if config.develop {
         let dev_command = &config.develop_command;
-        dev_server = Some(
-            tokio::process::Command::new(
-                dev_command
-                    .first()
-                    .expect("develop command should have at least one part"),
-            )
-            .current_dir(PathBuf::from_str("web/")?)
-            .env("API_PORT", &config.port)
-            .env("DEV_SERVER_PORT", &config.dev_server_port)
-            .args(dev_command.iter().skip(1))
-            .kill_on_drop(true)
-            .spawn()
-            .unwrap(),
-        );
+        dev_server =
+            Some(
+                tokio::process::Command::new(
+                    dev_command
+                        .first()
+                        .expect("develop command should have at least one part"),
+                )
+                .current_dir(config.app_src.as_ref().expect(
+                    "app_src must be passed in config toml or from cli (neither were passed)",
+                ))
+                .env("API_PORT", &config.port)
+                .env("DEV_SERVER_PORT", &config.dev_server_port)
+                .args(dev_command.iter().skip(1))
+                .kill_on_drop(true)
+                .spawn()
+                .unwrap(),
+            );
         // TODO: find a better solution for letting the dev server start before gui queries it.
         sleep(Duration::from_millis(500));
     }
