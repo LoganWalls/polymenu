@@ -14,6 +14,7 @@ pub async fn run_gui(config: &Config) -> anyhow::Result<()> {
         .with_transparent(!config.opaque)
         .with_decorations(config.window_decorations)
         .with_inner_size(Size::Physical(PhysicalSize::new(1050, 1000)))
+        .with_focused(true)
         .build(&event_loop)
         .unwrap();
     let builder = WebViewBuilder::new()
