@@ -1,8 +1,9 @@
-use clap::{Parser, ValueHint};
+use clap::{Args, Parser, ValueHint};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::path::PathBuf;
+use tao::dpi::{PhysicalPosition, PhysicalSize};
 
 use crate::command::Command;
 use crate::io::IOFormat;
@@ -15,6 +16,7 @@ pub trait UpdateFromOther {
 
 #[derive(UpdateFromOther, Parser, Serialize, Deserialize, Clone, Default, Debug)]
 #[command(author, version, about, long_about = None)]
+#[clap(disable_help_flag = true)]
 pub struct Config {
     /// Read a config from a file
     #[arg(short, long, value_name = "FILE", value_hint = ValueHint::FilePath)]
@@ -45,15 +47,10 @@ pub struct Config {
     #[clap(skip)]
     pub commands: HashMap<String, Command>,
 
-    /// Whether or not to use an opaque window (default is transparent)
-    #[arg(long)]
+    /// Configuration options related to the webview window
+    #[command(flatten)]
     #[serde(default)]
-    pub opaque: bool,
-
-    /// Whether or not the window should have decorations
-    #[arg(long)]
-    #[serde(default)]
-    pub window_decorations: bool,
+    pub window: WindowOptions,
 
     /// The port that the server should bind to
     #[arg(short, long, value_name = "PORT", default_value_t = default_port())]
@@ -74,11 +71,68 @@ pub struct Config {
     #[clap(skip)]
     #[serde(default = "default_develop_command")]
     pub develop_command: Vec<String>,
+
+    #[clap(long, action = clap::ArgAction::HelpLong)]
+    #[serde(skip)]
+    help: Option<bool>,
 }
 
 impl Config {
     pub fn server_url(&self) -> String {
         format!("0.0.0.0:{}", &self.port)
+    }
+}
+
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default, Args, Serialize, Deserialize,
+)]
+pub struct WindowOptions {
+    #[arg(short, long = "window-width", requires = "height")]
+    /// Window's width in pixels
+    pub width: Option<u32>,
+
+    /// Window's height in pixels
+    #[arg(short, long = "window-height", requires = "width")]
+    pub height: Option<u32>,
+
+    /// Window's x coordinate in pixels
+    #[arg(short, long = "window-x", requires = "y")]
+    pub x: Option<u32>,
+
+    /// Window's y coordinate in pixels
+    #[arg(short, long = "window-y", requires = "x")]
+    pub y: Option<u32>,
+
+    /// Whether or not to use an opaque window (default is transparent)
+    #[arg(long = "window-opaque")]
+    #[serde(default)]
+    pub opaque: bool,
+
+    /// Do not autofocus the window
+    #[arg(long = "window-no-focus")]
+    #[serde(default)]
+    pub no_focus: bool,
+
+    /// Whether or not the window should have decorations
+    #[arg(long = "window-decorations")]
+    #[serde(default)]
+    pub decorations: bool,
+}
+
+impl WindowOptions {
+    pub fn size(&self) -> Option<PhysicalSize<u32>> {
+        if let (Some(width), Some(height)) = (self.width, self.height) {
+            Some(PhysicalSize::new(width, height))
+        } else {
+            None
+        }
+    }
+    pub fn position(&self) -> Option<PhysicalPosition<u32>> {
+        if let (Some(x), Some(y)) = (self.x, self.y) {
+            Some(PhysicalPosition::new(x, y))
+        } else {
+            None
+        }
     }
 }
 

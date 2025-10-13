@@ -1,5 +1,4 @@
 use tao::{
-    dpi::{PhysicalSize, Size},
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
     window::WindowBuilder,
@@ -10,15 +9,19 @@ use crate::config::Config;
 
 pub async fn run_gui(config: &Config) -> anyhow::Result<()> {
     let event_loop = EventLoop::new();
-    let window = WindowBuilder::new()
-        .with_transparent(!config.opaque)
-        .with_decorations(config.window_decorations)
-        .with_inner_size(Size::Physical(PhysicalSize::new(1050, 1000)))
-        .with_focused(true)
-        .build(&event_loop)
-        .unwrap();
+    let mut window = WindowBuilder::new()
+        .with_transparent(!config.window.opaque)
+        .with_decorations(config.window.decorations)
+        .with_focused(!config.window.no_focus);
+    if let Some(size) = config.window.size() {
+        window = window.with_inner_size(size);
+    }
+    if let Some(position) = config.window.position() {
+        window = window.with_position(position);
+    }
+    let window = window.build(&event_loop).unwrap();
     let builder = WebViewBuilder::new()
-        .with_transparent(!config.opaque)
+        .with_transparent(!config.window.opaque)
         .with_devtools(true)
         .with_url(format!(
             "http://localhost:{}",

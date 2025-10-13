@@ -9,6 +9,9 @@
 
 app_src = "web/"
 
+[window]
+width = 1050
+height = 2000
 
 # Define options specific to this app that can be overriden at runtime
 [options]
