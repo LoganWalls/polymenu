@@ -1,12 +1,15 @@
+use std::path::PathBuf;
 use std::thread::sleep;
 use std::time::Duration;
 
 use self::config::{Config, UpdateFromOther};
+use self::expansion::expand_path;
 use self::gui::run_gui;
 use clap::Parser;
 
 mod command;
 mod config;
+mod expansion;
 mod gui;
 mod io;
 mod keybinds;
@@ -15,11 +18,14 @@ mod server;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let cli_opts = Config::try_parse()?;
-    let config_str = &cli_opts.config.as_ref().map_or_else(
+    let config_str = cli_opts.config.as_ref().map_or_else(
         || include_str!("../../default-config.toml").to_string(),
-        |path| std::fs::read_to_string(path).unwrap(),
+        |path| {
+            std::fs::read_to_string(expand_path(path).expect("could not expand config path"))
+                .unwrap()
+        },
     );
-    let mut config: Config = toml::from_str(config_str)?;
+    let mut config: Config = toml::from_str(&config_str)?;
     config.update_from_other(cli_opts);
 
     let server = {
@@ -30,23 +36,24 @@ async fn main() -> anyhow::Result<()> {
     let mut dev_server = None;
     if config.develop {
         let dev_command = &config.develop_command;
-        dev_server =
-            Some(
-                tokio::process::Command::new(
-                    dev_command
-                        .first()
-                        .expect("develop command should have at least one part"),
-                )
-                .current_dir(config.app_src.as_ref().expect(
-                    "app_src must be passed in config toml or from cli (neither were passed)",
-                ))
-                .env("API_PORT", &config.port)
-                .env("DEV_SERVER_PORT", &config.dev_server_port)
-                .args(dev_command.iter().skip(1))
-                .kill_on_drop(true)
-                .spawn()
-                .unwrap(),
-            );
+        let app_src = PathBuf::from(expand_path(config.app_src.as_ref().expect(
+            "`app_src` must be provided either in your config file or as a CLI argument (neither was provided)"
+        ))?);
+
+        dev_server = Some(
+            tokio::process::Command::new(
+                dev_command
+                    .first()
+                    .expect("develop command should have at least one part"),
+            )
+            .current_dir(app_src)
+            .env("API_PORT", &config.port)
+            .env("DEV_SERVER_PORT", &config.dev_server_port)
+            .args(dev_command.iter().skip(1))
+            .kill_on_drop(true)
+            .spawn()
+            .unwrap(),
+        );
         // TODO: find a better solution for letting the dev server start before gui queries it.
         sleep(Duration::from_millis(500));
     }

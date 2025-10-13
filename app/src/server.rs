@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, path::PathBuf};
 
 use anyhow::Context;
 use axum::{
@@ -18,6 +18,7 @@ use tracing_subscriber::EnvFilter;
 
 use crate::{
     config::Config,
+    expansion::expand_path,
     io::{DataParser, DataSourceKind},
 };
 
@@ -40,9 +41,9 @@ pub async fn run(
         .init();
 
     let ui_src = {
-        let mut path = config.app_src.clone().expect(
+        let mut path = PathBuf::from(expand_path(config.app_src.as_ref().expect(
             "`app_src` must be provided either in your config file or as a CLI argument (neither was provided)"
-        );
+        ))?);
         path.push("dist");
         path.into_os_string()
             .into_string()
