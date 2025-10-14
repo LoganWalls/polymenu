@@ -1,19 +1,23 @@
-use std::path::PathBuf;
 use std::thread::sleep;
 use std::time::Duration;
 
 use self::config::{Config, UpdateFromOther};
+use self::dev_server::run_dev_server;
 use self::expansion::expand_path;
 use self::gui::run_gui;
+use self::shutdown::{AppEvent, ShutdownBridge};
 use clap::Parser;
+use tao::event_loop::{EventLoop, EventLoopBuilder};
 
 mod command;
 mod config;
+mod dev_server;
 mod expansion;
 mod gui;
 mod io;
 mod keybinds;
 mod server;
+mod shutdown;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -28,40 +32,29 @@ async fn main() -> anyhow::Result<()> {
     let mut config: Config = toml::from_str(&config_str)?;
     config.update_from_other(cli_opts);
 
+    let event_loop: EventLoop<AppEvent> = EventLoopBuilder::with_user_event().build();
+    let event_loop_proxy = event_loop.create_proxy();
+    let shutdown_bridge = ShutdownBridge::new(event_loop_proxy);
+
     let server = {
         let server_config = config.clone();
-        tokio::spawn(async move { server::run(server_config).await.unwrap().await.unwrap() })
+        let shutdown_token = shutdown_bridge.token.clone();
+        tokio::spawn(async move { server::run(server_config, shutdown_token).await.unwrap() })
     };
 
-    let mut dev_server = None;
     if config.develop {
-        let dev_command = &config.develop_command;
-        let app_src = PathBuf::from(expand_path(config.app_src.as_ref().expect(
-            "`app_src` must be provided either in your config file or as a CLI argument (neither was provided)"
-        ))?);
-
-        dev_server = Some(
-            tokio::process::Command::new(
-                dev_command
-                    .first()
-                    .expect("develop command should have at least one part"),
-            )
-            .current_dir(app_src)
-            .env("API_PORT", &config.port)
-            .env("DEV_SERVER_PORT", &config.dev_server_port)
-            .args(dev_command.iter().skip(1))
-            .kill_on_drop(true)
-            .spawn()
-            .unwrap(),
-        );
+        let server_config = config.clone();
+        let shutdown_token = shutdown_bridge.token.clone();
+        tokio::spawn(async move {
+            run_dev_server(&server_config, shutdown_token)
+                .await
+                .unwrap()
+        });
         // TODO: find a better solution for letting the dev server start before gui queries it.
-        sleep(Duration::from_millis(500));
+        sleep(Duration::from_millis(1000));
     }
 
-    run_gui(&config).await?;
+    run_gui(&config, event_loop, shutdown_bridge.token).await?;
     server.abort();
-    if let Some(s) = &mut dev_server {
-        s.kill().await?
-    }
     Ok(())
 }

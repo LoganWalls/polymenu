@@ -9,6 +9,7 @@ use axum::{
 };
 use serde::Deserialize;
 use serde_json::Value;
+use tokio_util::sync::CancellationToken;
 use tower_http::{
     compression::CompressionLayer,
     services::{ServeDir, ServeFile},
@@ -25,17 +26,19 @@ use crate::{
 #[derive(Clone)]
 struct AppState {
     pub config: Config,
+    shutdown_token: CancellationToken,
 }
 
 impl AppState {
-    pub fn new(config: Config) -> Self {
-        AppState { config }
+    pub fn new(config: Config, shutdown_token: CancellationToken) -> Self {
+        AppState {
+            config,
+            shutdown_token,
+        }
     }
 }
 
-pub async fn run(
-    config: Config,
-) -> anyhow::Result<axum::serve::Serve<tokio::net::TcpListener, Router, Router>> {
+pub async fn run(config: Config, shutdown_token: CancellationToken) -> anyhow::Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::from_default_env())
         .init();
@@ -62,12 +65,15 @@ pub async fn run(
     let app = Router::new()
         .nest("/api", api_routes)
         .fallback_service(ui_service)
-        .with_state(AppState::new(config))
+        .with_state(AppState::new(config, shutdown_token.clone()))
         .layer(TraceLayer::new_for_http())
         .layer(CompressionLayer::new());
 
     let listener = tokio::net::TcpListener::bind(url).await.unwrap();
-    Ok(axum::serve(listener, app))
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal(shutdown_token))
+        .await
+        .context("Problem starting server")
 }
 
 async fn read_input(State(state): State<AppState>) -> Json<Vec<Value>> {
@@ -75,8 +81,8 @@ async fn read_input(State(state): State<AppState>) -> Json<Vec<Value>> {
     Json(parser.parse(HashMap::new()).unwrap())
 }
 
-async fn close() {
-    std::process::exit(0);
+async fn close(State(state): State<AppState>) {
+    state.shutdown_token.cancel();
 }
 
 async fn options(State(state): State<AppState>) -> Json<HashMap<String, Value>> {
@@ -119,4 +125,8 @@ async fn command(
     .with_context(|| format!("Could not parse output for command: {name}"))
     .unwrap();
     Ok(Json(data))
+}
+
+async fn shutdown_signal(token: CancellationToken) {
+    token.cancelled().await;
 }

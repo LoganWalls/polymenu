@@ -3,12 +3,16 @@ use tao::{
     event_loop::{ControlFlow, EventLoop},
     window::WindowBuilder,
 };
+use tokio_util::sync::CancellationToken;
 use wry::WebViewBuilder;
 
-use crate::config::Config;
+use crate::{config::Config, shutdown::AppEvent};
 
-pub async fn run_gui(config: &Config) -> anyhow::Result<()> {
-    let event_loop = EventLoop::new();
+pub async fn run_gui(
+    config: &Config,
+    event_loop: EventLoop<AppEvent>,
+    shutdown_token: CancellationToken,
+) -> anyhow::Result<()> {
     let mut window = WindowBuilder::new()
         .with_transparent(!config.window.opaque)
         .with_decorations(config.window.decorations)
@@ -46,12 +50,18 @@ pub async fn run_gui(config: &Config) -> anyhow::Result<()> {
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
 
-        if let Event::WindowEvent {
-            event: WindowEvent::CloseRequested,
-            ..
-        } = event
-        {
-            *control_flow = ControlFlow::Exit;
+        match event {
+            Event::WindowEvent {
+                event: WindowEvent::CloseRequested,
+                ..
+            }
+            | Event::UserEvent(AppEvent::Shutdown) => {
+                // Shutdown the server and dev server if they haven't been shutdown already
+                shutdown_token.cancel();
+                // Exit the application & close the GUI window
+                *control_flow = ControlFlow::Exit;
+            }
+            _ => {}
         }
     });
 }
