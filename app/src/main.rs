@@ -3,7 +3,6 @@ use std::time::Duration;
 
 use self::config::{Config, UpdateFromOther};
 use self::dev_server::run_dev_server;
-use self::expansion::expand_path;
 use self::gui::run_gui;
 use self::shutdown::{AppEvent, ShutdownBridge};
 use clap::Parser;
@@ -22,21 +21,19 @@ mod shutdown;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let cli_opts = Config::try_parse()?;
-    let config_str = cli_opts.config.as_ref().map_or_else(
-        || include_str!("../../default-config.toml").to_string(),
-        |path| {
-            std::fs::read_to_string(expand_path(path).expect("could not expand config path"))
-                .unwrap()
-        },
-    );
-    let mut config: Config = toml::from_str(&config_str)?;
+    let mut config = Config::from_file(
+        &cli_opts
+            .config
+            .to_owned()
+            .unwrap_or_else(Config::default_path),
+    )?;
     config.update_from_other(cli_opts);
 
     let event_loop: EventLoop<AppEvent> = EventLoopBuilder::with_user_event().build();
     let event_loop_proxy = event_loop.create_proxy();
     let shutdown_bridge = ShutdownBridge::new(event_loop_proxy);
 
-    let server = {
+    {
         let server_config = config.clone();
         let shutdown_token = shutdown_bridge.token.clone();
         tokio::spawn(async move { server::run(server_config, shutdown_token).await.unwrap() })
@@ -54,7 +51,9 @@ async fn main() -> anyhow::Result<()> {
         sleep(Duration::from_millis(1000));
     }
 
-    run_gui(&config, event_loop, shutdown_bridge.token).await?;
-    server.abort();
-    Ok(())
+    let gui_result = run_gui(&config, event_loop, shutdown_bridge.token.clone()).await;
+    if gui_result.is_err() {
+        shutdown_bridge.token.cancel();
+    }
+    gui_result
 }

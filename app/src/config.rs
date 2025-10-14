@@ -1,3 +1,4 @@
+use anyhow::{Context, Result};
 use clap::{Args, Parser, ValueHint};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -6,6 +7,7 @@ use std::path::PathBuf;
 use tao::dpi::{PhysicalPosition, PhysicalSize};
 
 use crate::command::Command;
+use crate::expansion::expand_path;
 use crate::io::IOFormat;
 
 use polymenu_derive::UpdateFromOther;
@@ -80,6 +82,30 @@ pub struct Config {
 impl Config {
     pub fn server_url(&self) -> String {
         format!("0.0.0.0:{}", &self.port)
+    }
+
+    pub fn from_file(path: &PathBuf) -> Result<Self> {
+        let src = std::fs::read_to_string(expand_path(path)?)
+            .with_context(|| format!("Coule not read configuration file from: {path:?}"))?;
+        Ok(toml::from_str(&src)?)
+    }
+
+    pub fn default_path() -> PathBuf {
+        #[cfg(any(target_os = "windows", target_os = "linux"))]
+        let mut path =
+            dirs::config_dir().expect("Could not find config directory for current user");
+
+        #[cfg(target_os = "macos")]
+        let mut path = {
+            let mut path =
+                dirs::home_dir().expect("Could not find home directory for current user");
+            path.push(".config");
+            path
+        };
+
+        path.push("polymenu");
+        path.push("config.toml");
+        path
     }
 }
 
