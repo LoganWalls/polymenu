@@ -1,7 +1,10 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::str::FromStr;
 
 use anyhow::{Context, Result};
+use killport::killport::{Killport, KillportOperations};
+use killport::signal::KillportSignal;
 use tokio_util::sync::CancellationToken;
 
 use crate::config::Config;
@@ -31,16 +34,29 @@ pub async fn run_dev_server(config: &Config, shutdown_token: CancellationToken) 
     .kill_on_drop(true)
     .spawn()
     .context("Problem starting dev server")?;
+
+    let kp = Killport {};
+    let dev_port_int: u16 = config.dev_server_port.parse()?;
+    let result: Result<()>;
     tokio::select! {
         status = dev_server.wait() => {
             let status = status.context("Problem getting exit status")?;
-            println!("Dev server exited with status: {status}")
+            println!("Dev server exited with status: {status}");
+            result = Ok(());
         }
         _ = shutdown_token.cancelled() => {
             println!("Shutting down dev server...");
-            let _ = dev_server.kill().await;
-            let _ = dev_server.wait().await;
+            // We need to kill the dev server using killport because killing with `.kill().await`
+            // only kills the parent dev server process and the child processes become zombies (at
+            // least, for Vite).
+            result = kp.kill_service_by_port(
+                dev_port_int,
+                KillportSignal::from_str("SIGKILL").expect("wrong signal vro"),
+                killport::cli::Mode::Process,
+                false,
+            ).map(|_| ()).context("Problem killing dev server process");
+            println!("Done shutting down dev server...");
         }
     }
-    Ok(())
+    result
 }

@@ -6,7 +6,12 @@ use tao::{
 use tokio_util::sync::CancellationToken;
 use wry::WebViewBuilder;
 
-use crate::{config::Config, shutdown::AppEvent};
+use crate::config::Config;
+
+#[derive(Debug, Clone)]
+pub enum AppEvent {
+    Shutdown,
+}
 
 pub async fn run_gui(
     config: &Config,
@@ -54,10 +59,11 @@ pub async fn run_gui(
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,
                 ..
-            }
-            | Event::UserEvent(AppEvent::Shutdown) => {
+            } => {
                 // Shutdown the server and dev server if they haven't been shutdown already
                 shutdown_token.cancel();
+            }
+            Event::UserEvent(AppEvent::Shutdown) => {
                 // Exit the application & close the GUI window
                 *control_flow = ControlFlow::Exit;
             }
