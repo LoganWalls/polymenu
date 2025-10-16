@@ -1,11 +1,11 @@
-type JsonPrimitive = string | number | boolean | null;
-type JsonValue = JsonPrimitive | JsonObject | JsonArray;
-interface JsonObject { [key: string]: JsonValue }
-interface JsonArray extends Array<JsonValue> { }
+export type JsonPrimitive = string | number | boolean | null;
+export type JsonValue = JsonPrimitive | JsonObject | JsonArray;
+export interface JsonObject { [key: string]: JsonValue }
+export interface JsonArray extends Array<JsonValue> { }
 
-const apiRoutePrefix = "api"
+export const apiRoutePrefix = "api"
 
-class App {
+export class App {
   /**
    * Options passed to the program at startup 
    */
@@ -13,6 +13,25 @@ class App {
 
   constructor(options: Record<string, JsonValue>) {
     this.options = options;
+  }
+
+  /**
+   * Creates a new `App` instance by fetching user-provided options from the server.
+   * @returns a new `App` instance
+   */
+  static async fromFetchedOptions(): Promise<App> {
+    const optionsRequest = new Request(`${apiRoutePrefix}/options`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const optionsResponse = await window.fetch(optionsRequest);
+    if (!optionsResponse.ok) {
+      throw new Error(`HTTP error! Status: ${optionsResponse.status}`);
+    }
+    const options: Record<string, JsonValue> = await optionsResponse.json();
+    return new App(options);
   }
 
   /**
@@ -94,17 +113,3 @@ class App {
     }
   }
 }
-
-const optionsRequest = new Request(`${apiRoutePrefix}/options`, {
-  method: "GET",
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-const optionsResponse = await window.fetch(optionsRequest);
-if (!optionsResponse.ok) {
-  throw new Error(`HTTP error! Status: ${optionsResponse.status}`);
-}
-const options = await optionsResponse.json();
-
-export const app = new App(options);

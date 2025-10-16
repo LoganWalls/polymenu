@@ -1,7 +1,7 @@
 {
-  "name": "polymenu",
+  "name": "polymenu-fuzzy-finder-example",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -21,6 +21,7 @@
     "@tailwindcss/vite": "^4.1.11",
     "clsx": "^2.1.1",
     "fuse.js": "^7.1.0",
+    "polymenu": "file:../../typescript/polymenu-0.1.0.tgz",
     "tailwindcss": "^4.1.11"
   }
 }

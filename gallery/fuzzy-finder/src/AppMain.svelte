@@ -1,7 +1,6 @@
 <script lang="ts">
-  import keymap from "./keymap.svelte";
-  import { app } from "./app.svelte";
-  import util from "./util";
+  import { app, keymap } from "./globalState";
+  import * as util from "polymenu/util";
 
   import Fuse from "fuse.js";
   import SearchIcon from "./lib/SearchIcon.svelte";

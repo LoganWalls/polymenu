@@ -1,8 +1,14 @@
-type KeymapFn = () => void | Promise<void> | undefined;
+/**
+* A utility for managing keymaps
+*
+* @module keymap
+* */
 
-class Keymap {
-  mode: string | null = $state(null);
-  map: Map<string | null, Map<string, KeymapFn>> = $state(new Map());
+export type KeymapFn = () => void | Promise<void> | undefined;
+
+export class Keymap {
+  mode: string | null = null;
+  map: Map<string | null, Map<string, KeymapFn>> = new Map();
 
   constructor() {
     document.addEventListener(
@@ -63,6 +69,3 @@ class Keymap {
   }
 
 }
-
-export const keymap = new Keymap();
-export default keymap;

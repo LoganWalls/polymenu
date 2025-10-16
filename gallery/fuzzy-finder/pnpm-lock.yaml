@@ -17,6 +17,9 @@ importers:
       fuse.js:
         specifier: ^7.1.0
         version: 7.1.0
+      polymenu:
+        specifier: file:../../../polymenu-client/polymenu-0.1.0.tgz
+        version: file:../../../polymenu-client/polymenu-0.1.0.tgz
       tailwindcss:
         specifier: ^4.1.11
         version: 4.1.11
@@ -624,6 +627,10 @@ packages:
     resolution: {integrity: sha512-M7BAV6Rlcy5u+m6oPhAPFgJTzAioX/6B0DxyvDlo9l8+T3nLKbrczg2WLUyzd45L8RqfUMyGPzekbMvX2Ldkwg==}
     engines: {node: '>=12'}
 
+  polymenu@file:../../../polymenu-client/polymenu-0.1.0.tgz:
+    resolution: {integrity: sha512-hvhM4mslacCY9vv3D9hiJiVCE5SR51v7yxl5xP9aTjNHFlHPz1uFfyqoKOWbpm851ChBLwf8YoCay3WHSLyNXQ==, tarball: file:../../../polymenu-client/polymenu-0.1.0.tgz}
+    version: 0.1.0
+
   postcss@8.5.6:
     resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
     engines: {node: ^10 || ^12 || >=14}
@@ -1144,6 +1151,8 @@ snapshots:
   picocolors@1.1.1: {}
 
   picomatch@4.0.2: {}
+
+  polymenu@file:../../../polymenu-client/polymenu-0.1.0.tgz: {}
 
   postcss@8.5.6:
     dependencies:
