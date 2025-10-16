@@ -6,6 +6,7 @@ use serde_json::Value;
 
 use crate::command::Command;
 use crate::config::Config;
+use crate::expansion::expand_path;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Cursor, Read};
@@ -65,7 +66,7 @@ impl DataParser {
         let mut source: Box<dyn io::Read> = match self.kind.clone() {
             DataSourceKind::StdIn => Box::new(Cursor::new(STDIN_CONTENT.as_bytes())),
             DataSourceKind::File(path) => {
-                Box::new(File::open(path).context("failed to open file")?)
+                Box::new(File::open(expand_path(&path)?).context("failed to open file")?)
             }
             DataSourceKind::Command(callback) => {
                 Box::new(callback.call(args).context("failed to execute callback")?)
