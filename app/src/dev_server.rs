@@ -45,7 +45,6 @@ pub async fn run_dev_server(config: &Config, shutdown_token: CancellationToken) 
             result = Ok(());
         }
         _ = shutdown_token.cancelled() => {
-            println!("Shutting down dev server...");
             // We need to kill the dev server using killport because killing with `.kill().await`
             // only kills the parent dev server process and the child processes become zombies (at
             // least, for Vite).
@@ -55,7 +54,6 @@ pub async fn run_dev_server(config: &Config, shutdown_token: CancellationToken) 
                 killport::cli::Mode::Process,
                 false,
             ).map(|_| ()).context("Problem killing dev server process");
-            println!("Done shutting down dev server...");
         }
     }
     result
