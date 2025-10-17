@@ -34,3 +34,7 @@ wry = { version = "0.53.4", features = [
   "devtools",
   "fullscreen",
 ] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+gtk = "0.18.2"
+gtk-layer-shell = "0.8.2"
