@@ -47,9 +47,20 @@
           ]
         );
         crate = craneLib.buildPackage {
+          pname = "polymenu";
+          version = "0.1.0";
           src = craneLib.cleanCargoSource ./.;
           strictDeps = true;
           nativeBuildInputs = buildDeps;
+          buildInputs = lib.optionals stdenv.isLinux (
+            with pkgs; [
+              glib
+              gtk3
+              libsoup_3
+              pkg-config
+              webkitgtk_4_1
+            ]
+          );
         };
       in {
         apps.${system}.default = let
