@@ -1,8 +1,5 @@
-use std::thread::sleep;
-use std::time::Duration;
-
 use self::config::{Config, UpdateFromOther};
-use self::dev_server::run_dev_server;
+use self::dev_server::{ping_dev_server, run_dev_server};
 use self::gui::{AppEvent, run_gui};
 use anyhow::{Context, Result, anyhow};
 use clap::Parser;
@@ -19,8 +16,7 @@ mod io;
 mod keybinds;
 mod server;
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     let cli_opts = Config::try_parse()?;
     let mut config = Config::from_file(
         &cli_opts
@@ -33,11 +29,16 @@ async fn main() -> Result<()> {
     let event_loop: EventLoop<AppEvent> = EventLoopBuilder::with_user_event().build();
     let event_loop_proxy = event_loop.create_proxy();
     let shutdown_token = CancellationToken::new();
+    let rt = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .worker_threads(1)
+        .build()
+        .context("failed to initialize tokio")?;
 
     let server: JoinHandle<Result<()>> = {
         let server_config = config.clone();
         let shutdown_token = shutdown_token.clone();
-        tokio::spawn(async move {
+        rt.spawn(async move {
             server::run(server_config, shutdown_token)
                 .await
                 .context("problem with server")
@@ -47,20 +48,22 @@ async fn main() -> Result<()> {
     let dev_server: JoinHandle<Result<()>> = if config.develop {
         let server_config = config.clone();
         let shutdown_token = shutdown_token.clone();
-        let dev_server = tokio::spawn(async move {
+        let dev_server = rt.spawn(async move {
             run_dev_server(&server_config, shutdown_token)
                 .await
                 .context("problem with dev server")
         });
-        // TODO: find a better solution for letting the dev server start before gui queries it.
-        sleep(Duration::from_millis(1000));
+
+        // Wait for the dev server to boot up before we continue
+        // (otherwise the window might open and show a 404)
+        rt.block_on(ping_dev_server(config.gui_target_url()))?;
 
         dev_server
     } else {
-        tokio::spawn(async { Ok(()) })
+        rt.spawn(async { Ok(()) })
     };
 
-    tokio::spawn(async move {
+    rt.spawn(async move {
         // Await both JoinHandles. This guarantees both tasks have actually exited.
         let results = tokio::try_join!(server, dev_server)
             .map_err(|e| anyhow!("join error: {e}"))
@@ -75,7 +78,7 @@ async fn main() -> Result<()> {
         let _ = event_loop_proxy.send_event(AppEvent::Shutdown);
     });
 
-    let gui_result = run_gui(&config, event_loop, shutdown_token.clone()).await;
+    let gui_result = run_gui(&config, event_loop, shutdown_token.clone());
     if gui_result.is_err() {
         shutdown_token.cancel();
     }

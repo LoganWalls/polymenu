@@ -2392,6 +2392,8 @@ dependencies = [
  "clap",
  "csv",
  "dirs",
+ "futures-util",
+ "hyper-util",
  "killport",
  "once_cell",
  "polymenu-derive",

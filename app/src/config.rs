@@ -80,6 +80,17 @@ pub struct Config {
 }
 
 impl Config {
+    pub fn gui_target_url(&self) -> String {
+        format!(
+            "http://localhost:{}",
+            if self.develop {
+                &self.dev_server_port
+            } else {
+                &self.port
+            }
+        )
+    }
+
     pub fn server_url(&self) -> String {
         format!("0.0.0.0:{}", &self.port)
     }

@@ -1,11 +1,20 @@
 use std::collections::HashMap;
+use std::future;
 use std::path::PathBuf;
+use std::pin::pin;
 use std::str::FromStr;
+use std::time::Duration;
 
 use anyhow::{Context, Result};
+use futures_util::{StreamExt, stream};
+use hyper_util::client::legacy::Client;
+use hyper_util::rt::TokioExecutor;
 use killport::killport::{Killport, KillportOperations};
 use killport::signal::KillportSignal;
+use tokio::time::{sleep, timeout};
 use tokio_util::sync::CancellationToken;
+use tower_http::body::Full;
+use wry::http::Uri;
 
 use crate::config::Config;
 use crate::expansion::{expand_path, shell_expand};
@@ -57,4 +66,26 @@ pub async fn run_dev_server(config: &Config, shutdown_token: CancellationToken) 
         }
     }
     result
+}
+
+pub async fn ping_dev_server(url: String) -> Result<()> {
+    const RETRY_COUNT: u32 = 100;
+    const RETRY_TIMEOUT: Duration = Duration::from_secs(10);
+    const RETRY_INTERVAL: Duration = Duration::from_millis(100);
+
+    let client: Client<_, Full> = Client::builder(TokioExecutor::new()).build_http();
+    let uri = Uri::from_str(&url).context("could not build URI from dev server URL")?;
+
+    let connection_success = stream::iter(0..RETRY_COUNT)
+        .then(async |_| {
+            let res = client.get(uri.clone()).await;
+            if res.is_err() {
+                sleep(RETRY_INTERVAL).await;
+            }
+            res
+        })
+        .filter(|res| future::ready(res.is_ok()));
+
+    timeout(RETRY_TIMEOUT, pin!(connection_success).next()).await?;
+    Ok(())
 }

@@ -13,7 +13,7 @@ pub enum AppEvent {
     Shutdown,
 }
 
-pub async fn run_gui(
+pub fn run_gui(
     config: &Config,
     event_loop: EventLoop<AppEvent>,
     shutdown_token: CancellationToken,
@@ -32,14 +32,7 @@ pub async fn run_gui(
     let builder = WebViewBuilder::new()
         .with_transparent(!config.window.opaque)
         .with_devtools(true)
-        .with_url(format!(
-            "http://localhost:{}",
-            if config.develop {
-                &config.dev_server_port
-            } else {
-                &config.port
-            }
-        ));
+        .with_url(config.gui_target_url());
 
     #[cfg(any(target_os = "windows", target_os = "macos"))]
     let _webview = builder.build(&window)?;
