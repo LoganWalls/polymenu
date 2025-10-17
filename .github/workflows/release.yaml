@@ -1,0 +1,95 @@
+name: TS client — build & upload tarball
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build_pack_upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Detect lockfile & manager
+      - name: Detect package manager
+        id: pm
+        run: |
+          if [ -f typescript/pnpm-lock.yaml ]; then
+            echo "manager=pnpm" >> "$GITHUB_OUTPUT"
+            echo "lock=typescript/pnpm-lock.yaml" >> "$GITHUB_OUTPUT"
+          elif [ -f typescript/yarn.lock ]; then
+            echo "manager=yarn" >> "$GITHUB_OUTPUT"
+            echo "lock=typescript/yarn.lock" >> "$GITHUB_OUTPUT"
+          elif [ -f typescript/package-lock.json ]; then
+            echo "manager=npm" >> "$GITHUB_OUTPUT"
+            echo "lock=typescript/package-lock.json" >> "$GITHUB_OUTPUT"
+          else
+            echo "manager=none" >> "$GITHUB_OUTPUT"
+            echo "lock=" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Setup Node + cache only if a lockfile exists
+      - name: Setup Node (with cache)
+        if: ${{ steps.pm.outputs.lock != '' }}
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: ${{ steps.pm.outputs.manager }}
+          cache-dependency-path: ${{ steps.pm.outputs.lock }}
+
+      # Fallback without cache (no lockfile)
+      - name: Setup Node (no cache)
+        if: ${{ steps.pm.outputs.lock == '' }}
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      # Install deps according to detected manager
+      - name: Install (npm)
+        if: ${{ steps.pm.outputs.manager == 'npm' }}
+        working-directory: typescript
+        run: npm ci
+
+      - name: Install (pnpm)
+        if: ${{ steps.pm.outputs.manager == 'pnpm' }}
+        working-directory: typescript
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+          pnpm install --frozen-lockfile
+
+      - name: Install (yarn)
+        if: ${{ steps.pm.outputs.manager == 'yarn' }}
+        working-directory: typescript
+        run: |
+          corepack enable
+          yarn install --frozen-lockfile
+
+      - name: Install (no lockfile)
+        if: ${{ steps.pm.outputs.manager == 'none' }}
+        working-directory: typescript
+        run: npm i --no-package-lock
+
+      # Build happens via prepack; produce tarball and rename with suffix
+      - name: Pack and rename
+        id: pack
+        working-directory: typescript
+        run: |
+          TGZ=$(npm pack --silent)
+          TAG=${{ github.event.release.tag_name }}
+          VER="${TAG#v}"                         # strip leading 'v' if present
+          NEW="polymenu-ts-client-${VER}.tgz"
+          mv "$TGZ" "$NEW"
+          echo "tgz=$NEW" >> "$GITHUB_OUTPUT"
+
+      - name: Upload tarball to this release (overwrite if exists)
+        uses: softprops/action-gh-release@v2
+        with:
+          files: typescript/${{ steps.pack.outputs.tgz }}
+          overwrite_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
