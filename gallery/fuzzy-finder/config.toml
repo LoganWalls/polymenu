@@ -14,17 +14,10 @@ app_src = "gallery/fuzzy-finder"
 width = 1050
 height = 2000
 
-# Define options specific to this app that can be overriden at runtime
+# Define app-specific options that can be overriden at runtime
 [options]
-# Prompt to be displayed as a placeholder in the text input box
-prompt = ""
-
-# Initial value for the text input box
-query = ""
-
-# How to treat case-sensitivity
-case = "smart"
-
+placeholder = "Find a country"
+case_sensitive = false
 
 # Define CLI commands that you can call from inside your app
 [commands.say_hello]

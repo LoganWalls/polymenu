@@ -23,7 +23,10 @@
     }
     allItems = inputValues as ItemData[];
     items = allItems;
-    return new Fuse(items, { keys: ["key"] });
+    return new Fuse(items, {
+      keys: ["key"],
+      isCaseSensitive: app.options.case_sensitive as boolean,
+    });
   })();
 
   keymap.set("enter", () => {
@@ -75,9 +78,10 @@
         <SearchIcon />
         <input
           name="search"
-          class="w-5/6 h-full p-0 text-3xl outline-none"
+          class="w-5/6 h-full p-0 text-3xl outline-none placeholder:text-gray-800 dark:placeholder:text-gray-300"
           type="text"
           autocomplete="off"
+          placeholder={app.options.placeholder as string}
           onfocusin={(e: FocusEvent) => (e.target as HTMLInputElement).select()}
           oninput={(e: Event) => {
             const query = (e.target as HTMLInputElement).value;
