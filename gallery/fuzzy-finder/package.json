@@ -10,7 +10,7 @@
     "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^5.1.0",
+    "@sveltejs/vite-plugin-svelte": "^6.2.1",
     "@tsconfig/svelte": "^5.0.4",
     "svelte": "^5.34.7",
     "svelte-check": "^4.2.2",
@@ -21,7 +21,7 @@
     "@tailwindcss/vite": "^4.1.11",
     "clsx": "^2.1.1",
     "fuse.js": "^7.1.0",
-    "polymenu": "file:../../typescript/polymenu-0.1.0.tgz",
+    "polymenu": "https://github.com/LoganWalls/polymenu/releases/download/v0.0.0/polymenu-ts-client-0.0.0.tgz",
     "tailwindcss": "^4.1.11"
   }
 }
