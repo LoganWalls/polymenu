@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use clap::{Args, Parser, ValueHint};
+use clap::{ArgAction, Args, Parser, ValueHint};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -81,6 +81,15 @@ pub struct Config {
     #[serde(default = "default_develop_command")]
     pub develop_command: Vec<String>,
 
+    // Private properties
+    #[arg(long = "option", action = ArgAction::Append, value_name = "KEY=VALUE")]
+    #[serde(skip)]
+    __options_cli: Vec<String>,
+
+    #[arg(long = "mount", action = ArgAction::Append, value_name = "NAME:PATH")]
+    #[serde(skip)]
+    __mounts_cli: Vec<String>,
+
     #[clap(long, action = clap::ArgAction::HelpLong)]
     #[serde(skip)]
     help: Option<bool>,
@@ -124,6 +133,27 @@ impl Config {
         path.push("polymenu");
         path.push("config.toml");
         path
+    }
+
+    /// Apply CLI overrides for `options` and `mount`
+    pub fn apply_cli_overrides(mut self) -> Result<Self> {
+        for s in self.__options_cli.iter() {
+            let (k, v) = s
+                .split_once('=')
+                .with_context(|| format!("expected format for options is KEY=VALUE, got: {s}"))?;
+            let key = k.parse().with_context(|| format!("invalid key: {k}"))?;
+            let val = v.parse().with_context(|| format!("invalid value: {v}"))?;
+            self.options.insert(key, val);
+        }
+        for s in self.__mounts_cli.iter() {
+            let (k, v) = s
+                .split_once(':')
+                .with_context(|| format!("expected format for mounts is NAME:PATH, got: {s}"))?;
+            let name = k.parse().with_context(|| format!("invalid key: {k}"))?;
+            let path = v.parse().with_context(|| format!("invalid value: {v}"))?;
+            self.mount.insert(name, path);
+        }
+        Ok(self)
     }
 }
 

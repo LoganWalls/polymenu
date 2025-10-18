@@ -25,6 +25,7 @@ fn main() -> Result<()> {
             .unwrap_or_else(Config::default_path),
     )?;
     config.update_from_other(cli_opts);
+    config = config.apply_cli_overrides()?;
 
     let event_loop: EventLoop<AppEvent> = EventLoopBuilder::with_user_event().build();
     let event_loop_proxy = event_loop.create_proxy();

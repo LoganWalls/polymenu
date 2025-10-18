@@ -71,7 +71,7 @@ pub async fn run(config: Config, shutdown_token: CancellationToken) -> anyhow::R
     let ui_service = get_service(ServeDir::new(&ui_src));
     let mut mounted = Router::new();
     for (key, path) in config.mount.iter() {
-        let expanded_path = dbg!(expand_path(path).context("failed to expand mount path")?);
+        let expanded_path = expand_path(path).context("failed to expand mount path")?;
         mounted = mounted.nest_service(
             &format!("/{key}"),
             get_service(ServeDir::new(expanded_path)),
