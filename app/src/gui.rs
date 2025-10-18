@@ -1,6 +1,8 @@
+#[cfg(target_os = "linux")]
 use anyhow::anyhow;
+#[cfg(target_os = "linux")]
+use tao::dpi::PhysicalSize;
 use tao::{
-    dpi::PhysicalSize,
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
     window::WindowBuilder,
