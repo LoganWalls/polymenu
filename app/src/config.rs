@@ -99,7 +99,7 @@ impl Config {
     }
 
     pub fn server_url(&self) -> String {
-        format!("0.0.0.0:{}", &self.port)
+        format!("127.0.0.1:{}", &self.port)
     }
 
     pub fn from_file(path: &PathBuf) -> Result<Self> {
