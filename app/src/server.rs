@@ -59,7 +59,7 @@ pub async fn run(config: Config, shutdown_token: CancellationToken) -> anyhow::R
         .init();
 
     let ui_src = {
-        let mut path = PathBuf::from(expand_path(config.app_src.as_ref().expect(
+        let mut path = PathBuf::from(expand_path(config.src.as_ref().expect(
             "`app_src` must be provided either in your config file or as a CLI argument (neither was provided)"
         ))?);
         path.push("dist");

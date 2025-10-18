@@ -8,7 +8,7 @@
 # columns = ["key", "value"]
 
 file = "gallery/fuzzy-finder/countries.json"
-app_src = "gallery/fuzzy-finder"
+src = "gallery/fuzzy-finder"
 
 [window]
 width = 1050

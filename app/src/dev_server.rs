@@ -21,7 +21,7 @@ use crate::expansion::{expand_path, shell_expand};
 
 pub async fn run_dev_server(config: &Config, shutdown_token: CancellationToken) -> Result<()> {
     let dev_command = &config.develop_command;
-    let app_src = PathBuf::from(expand_path(config.app_src.as_ref().context(
+    let app_src = PathBuf::from(expand_path(config.src.as_ref().context(
             "`app_src` must be provided either in your config file or as a CLI argument (neither was provided)"
         )?)?);
     let args = HashMap::new();
