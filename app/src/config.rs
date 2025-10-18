@@ -47,6 +47,7 @@ pub struct Config {
 
     /// CLI commands that can be run from the webview using their associated key
     #[clap(skip)]
+    #[serde(default)]
     pub commands: HashMap<String, Command>,
 
     /// Configuration options related to the webview window
