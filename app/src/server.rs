@@ -10,11 +10,7 @@ use axum::{
 use serde::Deserialize;
 use serde_json::Value;
 use tokio_util::sync::CancellationToken;
-use tower_http::{
-    compression::CompressionLayer,
-    services::{ServeDir, ServeFile},
-    trace::TraceLayer,
-};
+use tower_http::{compression::CompressionLayer, services::ServeDir, trace::TraceLayer};
 use tracing_subscriber::EnvFilter;
 
 use crate::{
@@ -53,9 +49,15 @@ pub async fn run(config: Config, shutdown_token: CancellationToken) -> anyhow::R
             .expect("could not convert `app_src` to str")
     };
     let url = config.server_url();
-    let ui_service = get_service(
-        ServeDir::new(&ui_src).not_found_service(ServeFile::new(format!("{ui_src}/index.html"))),
-    );
+    let ui_service = get_service(ServeDir::new(&ui_src));
+    let mut mounted = Router::new();
+    for (key, path) in config.mount.iter() {
+        let expanded_path = dbg!(expand_path(path).context("failed to expand mount path")?);
+        mounted = mounted.nest_service(
+            &format!("/{key}"),
+            get_service(ServeDir::new(expanded_path)),
+        );
+    }
     let api_routes = Router::new()
         .route("/options", get(options))
         .route("/input", get(read_input))
@@ -64,6 +66,7 @@ pub async fn run(config: Config, shutdown_token: CancellationToken) -> anyhow::R
         .route("/close", put(close));
     let app = Router::new()
         .nest("/api", api_routes)
+        .nest("/files", mounted)
         .fallback_service(ui_service)
         .with_state(AppState::new(config, shutdown_token.clone()))
         .layer(TraceLayer::new_for_http())

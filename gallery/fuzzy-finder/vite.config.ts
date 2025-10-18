@@ -12,6 +12,7 @@ export default defineConfig({
     port,
     proxy: {
       "/api": apiUrl,
+      "/files": apiUrl,
     }
   },
   plugins: [svelte(), tailwindcss()],

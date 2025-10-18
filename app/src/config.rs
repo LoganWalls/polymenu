@@ -43,7 +43,13 @@ pub struct Config {
 
     /// Options to be passed to the app at runtime
     #[clap(skip)]
+    #[serde(default)]
     pub options: HashMap<String, Value>,
+
+    /// A set of directories that will be served to the webview via `/files/{key}`
+    #[clap(skip)]
+    #[serde(default)]
+    pub mount: HashMap<String, PathBuf>,
 
     /// CLI commands that can be run from the webview using their associated key
     #[clap(skip)]
