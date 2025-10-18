@@ -10,7 +10,7 @@ use tao::{
 use tokio_util::sync::CancellationToken;
 use wry::WebViewBuilder;
 
-use crate::config::Config;
+use crate::{config::Config, server::AUTH_TOKEN};
 
 #[derive(Debug, Clone)]
 pub enum AppEvent {
@@ -84,7 +84,8 @@ pub fn run_gui(
     let builder = WebViewBuilder::new()
         .with_transparent(!config.window.opaque)
         .with_devtools(true)
-        .with_url(config.gui_target_url());
+        .with_url(config.gui_target_url())
+        .with_initialization_script(format!(r#"window.__AUTH_TOKEN__ = "{}";"#, *AUTH_TOKEN));
 
     #[cfg(any(target_os = "windows", target_os = "macos"))]
     let _webview = builder.build(&window)?;

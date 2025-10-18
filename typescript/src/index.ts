@@ -20,18 +20,38 @@ export class App {
    * @returns a new `App` instance
    */
   static async fromFetchedOptions(): Promise<App> {
+    await App.establishSession();
     const optionsRequest = new Request(`${apiRoutePrefix}/options`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
     });
-    const optionsResponse = await window.fetch(optionsRequest);
-    if (!optionsResponse.ok) {
-      throw new Error(`HTTP error! Status: ${optionsResponse.status}`);
+    const response = await window.fetch(optionsRequest);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
     }
-    const options: Record<string, JsonValue> = await optionsResponse.json();
+    const options: Record<string, JsonValue> = await response.json();
     return new App(options);
+  }
+
+
+  /**
+   * Use the auth token injected by polymenu's rust binary
+   * to establish a session. This sets a session cookie that
+   * allows your app to make requests to the polymenu server.
+   */
+  static async establishSession() {
+    const sessionRequest = new Request("/session", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${(window as any).__AUTH_TOKEN__}`
+      },
+    });
+    const response = await window.fetch(sessionRequest);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
   }
 
   /**

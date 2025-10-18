@@ -13,6 +13,7 @@ export default defineConfig({
     proxy: {
       "/api": apiUrl,
       "/files": apiUrl,
+      "/session": apiUrl,
     }
   },
   plugins: [svelte(), tailwindcss()],
