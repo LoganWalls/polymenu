@@ -5,13 +5,13 @@ export interface JsonArray extends Array<JsonValue> { }
 
 export const apiRoutePrefix = "api"
 
-export class App {
+export class App<T extends Record<string, any> = Record<string, JsonValue>> {
   /**
    * Options passed to the program at startup 
    */
-  options: Record<string, JsonValue>
+  options: T
 
-  constructor(options: Record<string, JsonValue>) {
+  constructor(options: T) {
     this.options = options;
   }
 
@@ -31,7 +31,7 @@ export class App {
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
-    const options: Record<string, JsonValue> = await response.json();
+    const options = await response.json();
     return new App(options);
   }
 
@@ -59,7 +59,7 @@ export class App {
    * depending on how the program was called from the CLI).
    * @returns Promise that resolves to the json values that were passed to the program
    */
-  input = async <T>(): Promise<T[]> => {
+  input = async <T = JsonValue>(): Promise<T[]> => {
     const request = new Request(`${apiRoutePrefix}/input`, {
       method: "GET",
       headers: {
@@ -103,7 +103,7 @@ export class App {
    * @param args The arguments to be passed to the command
    * @returns Promise that resolves to the (json) output of the command
    */
-  runCommand = async (name: string, args: Record<string, string> = {}) => {
+  runCommand = async <T = JsonValue>(name: string, args: Record<string, string> = {}): Promise<T> => {
     const request = new Request(`${apiRoutePrefix}/command/${name}`, {
       method: "POST",
       headers: {
@@ -115,7 +115,7 @@ export class App {
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
-    return await response.json()
+    return await response.json() as T
   }
 
   /**
