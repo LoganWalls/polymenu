@@ -47,15 +47,6 @@
   keymap.set("ctrl+l", () => {
     selectedItems = [];
   });
-  keymap.set("ctrl+t", () =>
-    app.runCommand("get_countries").then((countries: any[]) => {
-      console.log(countries);
-      countries.forEach((c) => {
-        console.log(c.key);
-        app.print([c.key]);
-      });
-    }),
-  );
   keymap.set("ctrl+h", () =>
     app.runCommand("say_anything", { message: "Watermellon!" }).then(app.print),
   );
