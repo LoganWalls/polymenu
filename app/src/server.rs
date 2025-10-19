@@ -139,7 +139,7 @@ async fn require_auth(
 
 async fn read_input(State(state): State<AppState>) -> Json<Vec<Value>> {
     let parser: DataParser = state.config.into();
-    Json(parser.parse(HashMap::new(), None).await.unwrap())
+    Json(parser.parse(None, None).await.unwrap())
 }
 
 async fn close(State(state): State<AppState>) {
@@ -163,7 +163,7 @@ async fn print_value(Json(req): Json<PrintRequest>) {
 
 #[derive(Deserialize)]
 struct CommandRequest {
-    args: HashMap<String, String>,
+    args: Option<HashMap<String, String>>,
     stdin: Option<Vec<String>>,
 }
 
@@ -183,7 +183,7 @@ async fn command(
         cmd.output_format,
         None,
     )
-    .parse(req.args, req.stdin)
+    .parse(req.args.as_ref(), req.stdin)
     .await
     .with_context(|| format!("Could not parse output for command: {name}"))
     .unwrap();

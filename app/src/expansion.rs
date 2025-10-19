@@ -21,7 +21,7 @@ pub fn expand_path(path: &PathBuf) -> Result<String> {
     .context("could not expand path")
 }
 
-pub fn shell_expand<SI>(item: &SI, args: &HashMap<String, String>) -> Result<String>
+pub fn shell_expand<SI>(item: &SI, args: Option<&HashMap<String, String>>) -> Result<String>
 where
     SI: AsRef<str> + ?Sized,
 {
@@ -42,18 +42,19 @@ fn home_dir() -> Option<String> {
 
 fn env_expansion_context(
     s: &str,
-    args: &HashMap<String, String>,
+    args: Option<&HashMap<String, String>>,
 ) -> Result<Option<Cow<'static, str>>> {
+    if let Some(arg_map) = args
+        && arg_map.contains_key(s)
+    {
+        return Ok(Some(arg_map.get(s).unwrap().to_owned().into()));
+    }
+
     match env::var(s) {
         Ok(value) => Ok(Some(value.into())),
-        Err(env::VarError::NotPresent) => args
-            .get(s)
-            .map(|s| Some(s.to_owned().into()))
-            .ok_or_else(|| {
-                anyhow!(
-                    "{s} is not an environment variable, and was not passed as a command argument"
-                )
-            }),
+        Err(env::VarError::NotPresent) => Err(anyhow!(
+            "{s} is not an environment variable, and was not passed as a command argument"
+        )),
         Err(env::VarError::NotUnicode(u)) => Err(anyhow!("Non-unicode values: {u:?} found in {s}")),
     }
     .context("Variable expansion failed")

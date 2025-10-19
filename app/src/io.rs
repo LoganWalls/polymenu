@@ -64,7 +64,7 @@ impl DataParser {
 
     pub async fn parse(
         &self,
-        args: HashMap<String, String>,
+        args: Option<&HashMap<String, String>>,
         stdin_lines: Option<Vec<String>>,
     ) -> anyhow::Result<Vec<Value>> {
         let mut source: Box<dyn io::Read> = match self.kind.clone() {

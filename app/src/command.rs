@@ -24,19 +24,19 @@ pub struct Command {
 impl Command {
     pub async fn call(
         &self,
-        args: HashMap<String, String>,
+        args: Option<&HashMap<String, String>>,
         stdin_lines: Option<Vec<String>>,
     ) -> Result<Cursor<Vec<u8>>> {
         let first = self
             .command
             .first()
             .ok_or_else(|| anyhow!("commands should have at least one part"))?;
-        let mut child = tokio::process::Command::new(shell_expand(first, &args)?)
+        let mut child = tokio::process::Command::new(shell_expand(first, args)?)
             .args(
                 self.command
                     .iter()
                     .skip(1)
-                    .map(|h| shell_expand(h, &args))
+                    .map(|h| shell_expand(h, args))
                     .collect::<Result<Vec<_>>>()?,
             )
             .stdin(Stdio::piped())

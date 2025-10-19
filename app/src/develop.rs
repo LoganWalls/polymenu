@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::future;
 use std::path::PathBuf;
 use std::pin::pin;
@@ -24,18 +23,17 @@ pub async fn run_dev_server(config: &Config, shutdown_token: CancellationToken) 
     let app_src = PathBuf::from(expand_path(config.src.as_ref().context(
             "`app_src` must be provided either in your config file or as a CLI argument (neither was provided)"
         )?)?);
-    let args = HashMap::new();
     let mut dev_server = tokio::process::Command::new(shell_expand(
         dev_command
             .first()
             .context("`develop_command` should have at least one part")?,
-        &args,
+        None,
     )?)
     .args(
         dev_command
             .iter()
             .skip(1)
-            .map(|c| shell_expand(c, &args))
+            .map(|c| shell_expand(c, None))
             .collect::<Result<Vec<_>>>()?,
     )
     .current_dir(app_src)
@@ -92,18 +90,17 @@ pub async fn ping_dev_server(url: String) -> Result<()> {
 }
 
 pub async fn compile_app(command: &[String], app_src: &PathBuf) -> Result<()> {
-    let args = HashMap::new();
     let mut child = tokio::process::Command::new(shell_expand(
         command
             .first()
             .context("`compile_command` should have at least one part")?,
-        &args,
+        None,
     )?)
     .args(
         command
             .iter()
             .skip(1)
-            .map(|c| shell_expand(c, &args))
+            .map(|c| shell_expand(c, None))
             .collect::<Result<Vec<_>>>()?,
     )
     .current_dir(app_src)
