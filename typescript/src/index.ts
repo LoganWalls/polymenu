@@ -103,13 +103,13 @@ export class App<T extends Record<string, any> = Record<string, JsonValue>> {
    * @param args The arguments to be passed to the command
    * @returns Promise that resolves to the (json) output of the command
    */
-  runCommand = async <T = JsonValue>(name: string, args: Record<string, string> = {}): Promise<T> => {
+  runCommand = async <T = JsonValue>(name: string, args: Record<string, string> = {}, stdin: string[] | null = null): Promise<T> => {
     const request = new Request(`${apiRoutePrefix}/command/${name}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ args }),
+      body: JSON.stringify({ args, stdin }),
     });
     const response = await window.fetch(request);
     if (!response.ok) {

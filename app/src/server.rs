@@ -70,7 +70,7 @@ pub async fn run(config: Config, shutdown_token: CancellationToken) -> anyhow::R
     let url = config.server_url();
     let ui_service = get_service(ServeDir::new(&ui_src));
     let mut mounted = Router::new();
-    for (key, path) in config.mount.iter() {
+    for (key, path) in config.mounts.iter() {
         let expanded_path = expand_path(path).context("failed to expand mount path")?;
         mounted = mounted.nest_service(
             &format!("/{key}"),
@@ -139,7 +139,7 @@ async fn require_auth(
 
 async fn read_input(State(state): State<AppState>) -> Json<Vec<Value>> {
     let parser: DataParser = state.config.into();
-    Json(parser.parse(HashMap::new()).unwrap())
+    Json(parser.parse(HashMap::new(), None).await.unwrap())
 }
 
 async fn close(State(state): State<AppState>) {
@@ -164,6 +164,7 @@ async fn print_value(Json(req): Json<PrintRequest>) {
 #[derive(Deserialize)]
 struct CommandRequest {
     args: HashMap<String, String>,
+    stdin: Option<Vec<String>>,
 }
 
 async fn command(
@@ -182,7 +183,8 @@ async fn command(
         cmd.output_format,
         None,
     )
-    .parse(req.args)
+    .parse(req.args, req.stdin)
+    .await
     .with_context(|| format!("Could not parse output for command: {name}"))
     .unwrap();
     Ok(Json(data))

@@ -49,7 +49,7 @@ pub struct Config {
     /// A set of directories that will be served to the webview via `/files/{key}`
     #[clap(skip)]
     #[serde(default)]
-    pub mount: HashMap<String, PathBuf>,
+    pub mounts: HashMap<String, PathBuf>,
 
     /// CLI commands that can be run from the webview using their associated key
     #[clap(skip)]
@@ -151,7 +151,7 @@ impl Config {
                 .with_context(|| format!("expected format for mounts is NAME:PATH, got: {s}"))?;
             let name = k.parse().with_context(|| format!("invalid key: {k}"))?;
             let path = v.parse().with_context(|| format!("invalid value: {v}"))?;
-            self.mount.insert(name, path);
+            self.mounts.insert(name, path);
         }
         Ok(self)
     }

@@ -35,7 +35,7 @@ pub enum IOFormat {
 
 impl Default for IOFormat {
     fn default() -> Self {
-        Self::HeadlessCsv
+        Self::Raw
     }
 }
 
@@ -62,15 +62,22 @@ impl DataParser {
         }
     }
 
-    pub fn parse(&self, args: HashMap<String, String>) -> anyhow::Result<Vec<Value>> {
+    pub async fn parse(
+        &self,
+        args: HashMap<String, String>,
+        stdin_lines: Option<Vec<String>>,
+    ) -> anyhow::Result<Vec<Value>> {
         let mut source: Box<dyn io::Read> = match self.kind.clone() {
             DataSourceKind::StdIn => Box::new(Cursor::new(STDIN_CONTENT.as_bytes())),
             DataSourceKind::File(path) => {
                 Box::new(File::open(expand_path(&path)?).context("failed to open file")?)
             }
-            DataSourceKind::Command(callback) => {
-                Box::new(callback.call(args).context("failed to execute callback")?)
-            }
+            DataSourceKind::Command(callback) => Box::new(
+                callback
+                    .call(args, stdin_lines)
+                    .await
+                    .context("failed to execute callback")?,
+            ),
         };
         match self.format {
             IOFormat::HeadlessCsv => read_csv(source, false, self.headers.clone()),
@@ -101,8 +108,7 @@ impl From<Config> for DataParser {
                     "csv" => IOFormat::Csv,
                     "json" => IOFormat::Json,
                     "jsonl" => IOFormat::JsonLines,
-                    "raw" => IOFormat::Raw,
-                    _ => IOFormat::HeadlessCsv,
+                    _ => IOFormat::Raw,
                 }
             } else {
                 IOFormat::HeadlessCsv
