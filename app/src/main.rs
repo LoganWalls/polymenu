@@ -1,5 +1,5 @@
 use self::config::{Config, UpdateFromOther};
-use self::dev_server::{ping_dev_server, run_dev_server};
+use self::develop::{compile_app, ping_dev_server, run_dev_server};
 use self::gui::{AppEvent, run_gui};
 use anyhow::{Context, Result, anyhow};
 use clap::Parser;
@@ -9,7 +9,7 @@ use tokio_util::sync::CancellationToken;
 
 mod command;
 mod config;
-mod dev_server;
+mod develop;
 mod expansion;
 mod gui;
 mod io;
@@ -27,15 +27,24 @@ fn main() -> Result<()> {
     config.update_from_other(cli_opts);
     config = config.apply_cli_overrides()?;
 
-    let event_loop: EventLoop<AppEvent> = EventLoopBuilder::with_user_event().build();
-    let event_loop_proxy = event_loop.create_proxy();
-    let shutdown_token = CancellationToken::new();
     let rt = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .worker_threads(1)
         .build()
         .context("failed to initialize tokio")?;
 
+    if config.compile {
+        rt.block_on(compile_app(
+            &config.compile_command,
+            &config.src.expect("no `src` provided"),
+        ))
+        .context("failed to run compile command")?;
+        return Ok(());
+    }
+
+    let event_loop: EventLoop<AppEvent> = EventLoopBuilder::with_user_event().build();
+    let event_loop_proxy = event_loop.create_proxy();
+    let shutdown_token = CancellationToken::new();
     let server: JoinHandle<Result<()>> = {
         let server_config = config.clone();
         let shutdown_token = shutdown_token.clone();

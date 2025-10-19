@@ -71,6 +71,11 @@ pub struct Config {
     #[serde(skip)]
     pub develop: bool,
 
+    /// Compile / build your app
+    #[arg(long)]
+    #[serde(skip)]
+    pub compile: bool,
+
     /// The port that the front end development server should bind to
     #[arg(short, long, value_name = "PORT", default_value_t = default_dev_server_port())]
     #[serde(default = "default_dev_server_port")]
@@ -80,6 +85,11 @@ pub struct Config {
     #[clap(skip)]
     #[serde(default = "default_develop_command")]
     pub develop_command: Vec<String>,
+
+    /// The command to compile / build your app
+    #[clap(skip)]
+    #[serde(default = "default_compile_command")]
+    pub compile_command: Vec<String>,
 
     // Private properties
     #[arg(long = "option", action = ArgAction::Append, value_name = "KEY=VALUE")]
@@ -220,6 +230,13 @@ fn default_dev_server_port() -> String {
 
 fn default_develop_command() -> Vec<String> {
     vec!["pnpm", "run", "dev"]
+        .into_iter()
+        .map(String::from)
+        .collect()
+}
+
+fn default_compile_command() -> Vec<String> {
+    vec!["pnpm", "run", "build"]
         .into_iter()
         .map(String::from)
         .collect()

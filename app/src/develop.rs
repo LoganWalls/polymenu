@@ -5,7 +5,7 @@ use std::pin::pin;
 use std::str::FromStr;
 use std::time::Duration;
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, anyhow};
 use futures_util::{StreamExt, stream};
 use hyper_util::client::legacy::Client;
 use hyper_util::rt::TokioExecutor;
@@ -34,6 +34,7 @@ pub async fn run_dev_server(config: &Config, shutdown_token: CancellationToken) 
     .args(
         dev_command
             .iter()
+            .skip(1)
             .map(|c| shell_expand(c, &args))
             .collect::<Result<Vec<_>>>()?,
     )
@@ -88,4 +89,40 @@ pub async fn ping_dev_server(url: String) -> Result<()> {
 
     timeout(RETRY_TIMEOUT, pin!(connection_success).next()).await?;
     Ok(())
+}
+
+pub async fn compile_app(command: &[String], app_src: &PathBuf) -> Result<()> {
+    let args = HashMap::new();
+    let mut child = tokio::process::Command::new(shell_expand(
+        command
+            .first()
+            .context("`compile_command` should have at least one part")?,
+        &args,
+    )?)
+    .args(
+        command
+            .iter()
+            .skip(1)
+            .map(|c| shell_expand(c, &args))
+            .collect::<Result<Vec<_>>>()?,
+    )
+    .current_dir(app_src)
+    .kill_on_drop(true)
+    .spawn()
+    .context("problem")?;
+
+    let status = child.wait().await?;
+    if let Some(code) = status.code()
+        && code == 0
+    {
+        Ok(())
+    } else {
+        Err(anyhow!(
+            "Non-zero exit status: {}",
+            status
+                .code()
+                .map(|i| i.to_string())
+                .unwrap_or("(cannot parse exit code)".to_string())
+        ))
+    }
 }
