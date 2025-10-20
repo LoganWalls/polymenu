@@ -1,0 +1,13 @@
+src = "gallery/dmenu/src"
+
+[mounts]
+icons = "$HOME/.cache/polymenu/app-launcher/icons"
+
+[options]
+case_sensitive = false
+highlight_matches = true
+max_visible_items = 9
+
+[window]
+width = 600
+height = 1360

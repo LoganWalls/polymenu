@@ -4,12 +4,15 @@
 
   import Fuse from "fuse.js";
   import SearchIcon from "./lib/SearchIcon.svelte";
-  import Item, { type ItemData } from "./lib/Item.svelte";
+  import Item from "./lib/Item.svelte";
+  import { submit, type ItemData } from "./common";
 
   let selectedItems: ItemData[] = $state([]);
   let cursorIndex = $state(0);
   let items: ItemData[] = $state([]);
   let allItems: ItemData[] = $state([]);
+  const maxVisibleItems = app.options.max_visible_items as number;
+
   let fusePromise = (async () => {
     // Get inputs from the CLI
     const inputValues = await app.input<ItemData | string[]>();
@@ -22,50 +25,47 @@
       }
     }
     allItems = inputValues as ItemData[];
-    items = allItems;
+    items = allItems.slice(0, maxVisibleItems);
     return new Fuse(items, {
       keys: ["key"],
       isCaseSensitive: app.options.case_sensitive as boolean,
+      includeMatches: app.options.highlight_matches as boolean,
     });
   })();
 
-  keymap.set("enter", () => {
-    if (selectedItems.length == 0) {
-      selectedItems.push(items[cursorIndex]);
-    }
-    app.print(selectedItems.map((item) => item.key));
-  });
-  keymap.set("tab", () => {
-    selectedItems = util.toggleSet(items[cursorIndex], selectedItems);
-  });
-  keymap.set("ctrl+j", () => {
-    cursorIndex = util.wrappingShift(cursorIndex, 1, 0, items.length - 1);
-  });
-  keymap.set("ctrl+k", () => {
+  function cursorUp() {
     cursorIndex = util.wrappingShift(cursorIndex, -1, 0, items.length - 1);
-  });
+  }
+  function cursorDown() {
+    cursorIndex = util.wrappingShift(cursorIndex, 1, 0, items.length - 1);
+  }
+
+  keymap.set("ctrl+j", cursorDown);
+  keymap.set("arrowdown", cursorDown);
+  keymap.set("ctrl+k", cursorUp);
+  keymap.set("arrowup", cursorUp);
   keymap.set("ctrl+l", () => {
     selectedItems = [];
   });
-  keymap.set("ctrl+h", () =>
-    app.runCommand("say_anything", { message: "Watermellon!" }).then(app.print),
-  );
   keymap.set("escape", app.close);
   keymap.set("ctrl+d", app.close);
+  keymap.set("tab", () => {
+    selectedItems = util.toggleSet(items[cursorIndex], selectedItems);
+  });
+  keymap.set("enter", () => {
+    submit(items[cursorIndex], selectedItems);
+  });
 </script>
 
 <main class="text-xl bg-transparent dark:text-white">
   <div
-    class="max-h-screen w-lg rounded-xl flex flex-col items-center gap-5 bg-gray-200/80 dark:bg-gray-900/80"
+    class="flex flex-col max-h-screen w-full rounded-xl bg-gray-200/80 dark:bg-gray-900/80"
   >
     {#await fusePromise}
       <p>Loading...</p>
     {:then fuse}
       <!-- svelte-ignore a11y_autofocus -->
-      <label
-        class="w-full p-0 h-14 border-b-1 border-b-gray-600 dark:border-b-gray-300 align-middle"
-        for="search"
-      >
+      <label class="w-full p-0 h-14 align-middle" for="search">
         <SearchIcon />
         <input
           name="search"
@@ -75,25 +75,38 @@
           placeholder={app.options.placeholder as string}
           onfocusin={(e: FocusEvent) => (e.target as HTMLInputElement).select()}
           oninput={(e: Event) => {
+            cursorIndex = 0;
             const query = (e.target as HTMLInputElement).value;
             if (query) {
-              items = fuse.search(query).map((r) => r.item);
+              items = fuse
+                .search(query)
+                .map((r) => {
+                  const matches = r.matches || [];
+                  const matchIndices = matches[0]
+                    ? matches[0].indices
+                    : undefined;
+                  return Object.assign(r.item, { matchIndices });
+                })
+                .slice(0, maxVisibleItems);
             } else {
-              items = allItems;
+              for (const i of allItems) {
+                i.matchIndices = undefined;
+              }
+              items = allItems.slice(0, maxVisibleItems);
             }
           }}
           autofocus
         />
       </label>
-      <div
-        class="flex flex-col items-center p-1 gap-2 h-full overflow-y-scroll"
-      >
+      <div class="flex flex-col h-full w-full overflow-y-scroll">
         {#each items as item, i}
           <Item
             index={i}
             data={item}
             selected={selectedItems.includes(item)}
             underCursor={i == cursorIndex}
+            lastItem={i == items.length - 1}
+            bind:selectedItems
           />
         {/each}
       </div>

@@ -1,5 +1,5 @@
 {
-  "name": "polymenu-fuzzy-finder-example",
+  "name": "polymenu-dmenu-example",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -21,7 +21,7 @@
     "@tailwindcss/vite": "^4.1.11",
     "clsx": "^2.1.1",
     "fuse.js": "^7.1.0",
-    "polymenu": "https://github.com/LoganWalls/polymenu/releases/download/v0.0.0/polymenu-ts-client-0.0.0.tgz",
+    "polymenu": "link:../../../typescript",
     "tailwindcss": "^4.1.11"
   }
 }
