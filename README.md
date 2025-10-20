@@ -63,7 +63,7 @@ supported:
 If you always want to read from the same file, you can specify it in your
 `config.toml`:
 ```toml
-file = ~/path/to/foo.json
+file = "~/path/to/foo.json"
 # format = "json" # You can also specify an input format, but polymenu will infer it from the file's extension by default
 ```
 
@@ -141,7 +141,7 @@ case_sensitive = false
 
 You can override these values at runtime from the CLI by passing: `--option name=value`:
 ```sh
-polymenu --option 'placeholder="Or don't!"' --option case_sensitive=true
+polymenu --option 'placeholder="Or not"' --option case_sensitive=true
 ```
 
 Then you can access these values in JS/TS:
