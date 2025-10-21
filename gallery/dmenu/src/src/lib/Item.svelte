@@ -3,6 +3,7 @@
   import type { ItemData } from "../common";
   import { submit } from "../common";
   import * as util from "polymenu/util";
+  import FallbackIcon from "./FallbackIcon.svelte";
 
   const {
     data,
@@ -18,6 +19,7 @@
     lastItem: boolean;
     selectedItems: ItemData[];
   } = $props();
+  let imageMissing = $state(false);
 </script>
 
 <!-- svelte-ignore a11y_mouse_events_have_key_events -->
@@ -38,8 +40,17 @@
   }}
 >
   <div class="flex place-items-center gap-3">
-    {#if data.icon}
-      <img class="max-h-10" src={`/files/icons/${data.icon}`} alt="Icon" />
+    {#if data.icon !== null && data.icon !== undefined}
+      {#if !imageMissing}
+        <img
+          class="h-10"
+          src={`/files/icons/${data.icon}`}
+          alt="Icon"
+          onerror={() => (imageMissing = true)}
+        />
+      {:else}
+        <FallbackIcon />
+      {/if}
     {/if}
     <span>
       {#each data.key as char, i}

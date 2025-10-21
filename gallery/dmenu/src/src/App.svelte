@@ -11,7 +11,7 @@
   let cursorIndex = $state(0);
   let items: ItemData[] = $state([]);
   let allItems: ItemData[] = $state([]);
-  const maxVisibleItems = app.options.max_visible_items as number;
+  const itemsVisibleAtMaxHeight = 10;
 
   let fusePromise = (async () => {
     // Get inputs from the CLI
@@ -25,7 +25,7 @@
       }
     }
     allItems = inputValues as ItemData[];
-    items = allItems.slice(0, maxVisibleItems);
+    items = allItems;
     return new Fuse(items, {
       keys: ["key"],
       isCaseSensitive: app.options.case_sensitive as boolean,
@@ -78,21 +78,18 @@
             cursorIndex = 0;
             const query = (e.target as HTMLInputElement).value;
             if (query) {
-              items = fuse
-                .search(query)
-                .map((r) => {
-                  const matches = r.matches || [];
-                  const matchIndices = matches[0]
-                    ? matches[0].indices
-                    : undefined;
-                  return Object.assign(r.item, { matchIndices });
-                })
-                .slice(0, maxVisibleItems);
+              items = fuse.search(query).map((r) => {
+                const matches = r.matches || [];
+                const matchIndices = matches[0]
+                  ? matches[0].indices
+                  : undefined;
+                return Object.assign(r.item, { matchIndices });
+              });
             } else {
               for (const i of allItems) {
                 i.matchIndices = undefined;
               }
-              items = allItems.slice(0, maxVisibleItems);
+              items = allItems;
             }
           }}
           autofocus
@@ -105,7 +102,7 @@
             data={item}
             selected={selectedItems.includes(item)}
             underCursor={i == cursorIndex}
-            lastItem={i == items.length - 1}
+            lastItem={i == itemsVisibleAtMaxHeight - 1}
             bind:selectedItems
           />
         {/each}
