@@ -1,5 +1,5 @@
 # Polymenu
-`polymenu` is cross-platform (Wayland, X11, macOS, Windows) tool that allows you to
+`polymenu` is a cross-platform (Wayland, X11, macOS, Windows) tool that allows you to
 create personalized ephemeral GUI interfaces for your CLI tools and scripts
 using your favorite front-end web framework.
 
