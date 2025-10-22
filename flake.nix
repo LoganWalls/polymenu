@@ -56,6 +56,7 @@
             with pkgs; [
               glib
               gtk3
+              gtk-layer-shell
               libsoup_3
               pkg-config
               webkitgtk_4_1
