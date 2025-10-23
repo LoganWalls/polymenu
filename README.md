@@ -192,7 +192,7 @@ window-decorations = false
 ### Cargo
 1. Make sure you have installed the [rust toolchain](https://www.rust-lang.org/tools/install)
 2. Clone this repository and `cd` into it
-3. Compile and install the binary: `cargo install --path .`
+3. Compile and install the binary: `cargo install --path ./app`
 
 
 ### Nix
