@@ -5,6 +5,7 @@ use tao::dpi::PhysicalSize;
 use tao::{
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
+    platform::run_return::EventLoopExtRunReturn,
     window::WindowBuilder,
 };
 use tokio_util::sync::CancellationToken;
@@ -67,7 +68,7 @@ fn setup_wayland_layer_shell(
 
 pub fn run_gui(
     config: &Config,
-    event_loop: EventLoop<AppEvent>,
+    mut event_loop: EventLoop<AppEvent>,
     shutdown_token: CancellationToken,
 ) -> anyhow::Result<()> {
     let mut window = WindowBuilder::new()
@@ -80,6 +81,7 @@ pub fn run_gui(
     if let Some(position) = config.window.position() {
         window = window.with_position(position);
     }
+
     let window = window.build(&event_loop).unwrap();
     let builder = WebViewBuilder::new()
         .with_transparent(!config.window.opaque)
@@ -102,7 +104,7 @@ pub fn run_gui(
         (webview, overlay_window)
     };
 
-    event_loop.run(move |event, _, control_flow| {
+    let code = event_loop.run_return(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
 
         match event {
@@ -120,4 +122,10 @@ pub fn run_gui(
             _ => {}
         }
     });
+
+    if code == 0 {
+        Ok(())
+    } else {
+        Err(anyhow::anyhow!("GUI exited with code {}", code))
+    }
 }
