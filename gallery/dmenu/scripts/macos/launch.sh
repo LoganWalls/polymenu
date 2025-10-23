@@ -10,7 +10,8 @@ if [ ! -f "$INDEX" ]; then
   nu "$SCRIPT_DIR/build-cache.nu" "$CACHE_DIR"
 fi
 
-polymenu --config "$SCRIPT_DIR/../../config.toml" \
-  --mount "icons:$HOME/$CACHE_DIR/icons" \
+POLYMENU_GALLERY_APP_SRC="$SCRIPT_DIR/../../src" \
+  polymenu --config "$SCRIPT_DIR/../../config.toml" \
+  --mount "icons:$CACHE_DIR/icons" \
   --file "$INDEX" \
-  | xargs -l open -b
+  | xargs open -b

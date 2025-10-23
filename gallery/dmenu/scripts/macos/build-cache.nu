@@ -20,7 +20,7 @@ def main [cache_root: path] {
       osascript $"($script_dir)/render-icon.applescript" $app_path $app_icon 512
     }
     { "key": $app_name,
-      "value": $info.CFBundleIdentifier,
+      "value": $info.CFBundleIdentifier?,
       "icon": ($app_icon | path basename)
     }
   }

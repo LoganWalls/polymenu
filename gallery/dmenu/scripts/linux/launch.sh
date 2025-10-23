@@ -10,7 +10,8 @@ if [ ! -f "$INDEX" ]; then
   "$SCRIPT_DIR/build-cache.sh" "$CACHE_DIR"
 fi
 
-polymenu --config "$SCRIPT_DIR/../../config.toml" \
+POLYMENU_GALLERY_APP_SRC="$SCRIPT_DIR/../../src" \
+  polymenu --config "$SCRIPT_DIR/../../config.toml" \
   --mount "icons:$HOME/$CACHE_DIR/icons" \
   --file "$INDEX" \
-  | xargs -l gio launch
+  | xargs gio launch

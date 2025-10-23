@@ -1,4 +1,4 @@
-src = "gallery/dmenu/src"
+src = "$POLYMENU_GALLERY_APP_SRC"
 
 [options]
 case_sensitive = false
