@@ -126,6 +126,6 @@ pub fn run_gui(
     if code == 0 {
         Ok(())
     } else {
-        Err(anyhow::anyhow!("GUI exited with code {}", code))
+        Err(anyhow::anyhow!("GUI exited with code {code}"))
     }
 }
