@@ -59,7 +59,7 @@ export class App<T extends Record<string, any> = Record<string, JsonValue>> {
    * depending on how the program was called from the CLI).
    * @returns Promise that resolves to the json values that were passed to the program
    */
-  input = async <T = JsonValue>(): Promise<T[]> => {
+  input = async <T = JsonValue>(): Promise<T> => {
     const request = new Request(`${apiRoutePrefix}/input`, {
       method: "GET",
       headers: {

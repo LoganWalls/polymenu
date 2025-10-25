@@ -1,4 +1,4 @@
-use anyhow::Context;
+use anyhow::{Context, Result};
 use clap::ValueEnum;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
@@ -66,7 +66,7 @@ impl DataParser {
         &self,
         args: Option<&HashMap<String, String>>,
         stdin_lines: Option<Vec<String>>,
-    ) -> anyhow::Result<Vec<Value>> {
+    ) -> Result<Value> {
         let mut source: Box<dyn io::Read> = match self.kind.clone() {
             DataSourceKind::StdIn => Box::new(Cursor::new(STDIN_CONTENT.as_bytes())),
             DataSourceKind::File(path) => {
@@ -89,7 +89,7 @@ impl DataParser {
                 source
                     .read_to_string(&mut buf)
                     .context("failed to read raw input")?;
-                Ok(vec![Value::String(buf)])
+                Ok(Value::String(buf))
             }
         }
     }
@@ -131,7 +131,7 @@ pub fn read_csv(
     source: impl io::Read,
     has_headers: bool,
     user_headers: Option<Vec<String>>,
-) -> anyhow::Result<Vec<Value>> {
+) -> Result<Value> {
     let headless = !has_headers && user_headers.is_none();
     let mut rdr = csv::ReaderBuilder::new()
         .has_headers(!headless)
@@ -154,18 +154,19 @@ pub fn read_csv(
     }
 }
 
-pub fn read_jsonlines(source: impl io::Read) -> anyhow::Result<Vec<Value>> {
-    BufReader::new(source)
+pub fn read_jsonlines(source: impl io::Read) -> Result<Value> {
+    let objects: Vec<Value> = BufReader::new(source)
         .lines()
         .map(|line| {
             line.context("failed to read line").and_then(|l| {
-                serde_json::from_str(&l)
+                serde_json::from_str::<Value>(&l)
                     .with_context(|| format!("failed to parse json from string:\n\"{}\"", &l))
             })
         })
-        .collect()
+        .collect::<Result<_>>()?;
+    Ok(Value::Array(objects))
 }
 
-pub fn read_json(source: impl io::Read) -> anyhow::Result<Vec<Value>> {
+pub fn read_json(source: impl io::Read) -> Result<Value> {
     serde_json::from_reader(source).context("failed to parse json")
 }

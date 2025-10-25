@@ -137,7 +137,7 @@ async fn require_auth(
     next.run(req).await
 }
 
-async fn read_input(State(state): State<AppState>) -> Json<Vec<Value>> {
+async fn read_input(State(state): State<AppState>) -> Json<Value> {
     let parser: DataParser = state.config.into();
     Json(parser.parse(None, None).await.unwrap())
 }
@@ -171,7 +171,7 @@ async fn command(
     State(state): State<AppState>,
     Path(name): Path<String>,
     Json(req): Json<CommandRequest>,
-) -> Result<Json<Vec<Value>>> {
+) -> Result<Json<Value>> {
     let cmd = state
         .config
         .commands
