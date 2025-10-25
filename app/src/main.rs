@@ -80,7 +80,7 @@ fn main() -> Result<()> {
             .unwrap();
         for r in [results.0, results.1] {
             if let Err(e) = r {
-                eprintln!("{e}")
+                eprintln!("{e:#}")
             }
         }
         // Sending this event will trigger `std::process::exit`, so nothing can be printed

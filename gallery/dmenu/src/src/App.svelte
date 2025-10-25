@@ -62,7 +62,7 @@
     class="flex flex-col max-h-screen w-full rounded-xl bg-gray-200/80 dark:bg-gray-900/80"
   >
     {#await fusePromise}
-      <p>Loading...</p>
+      <p class="w-full text-center">Waiting for input...</p>
     {:then fuse}
       <!-- svelte-ignore a11y_autofocus -->
       <label class="w-full p-0 h-14 align-middle" for="search">

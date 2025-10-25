@@ -1,6 +1,6 @@
 use std::{collections::HashMap, path::PathBuf};
 
-use anyhow::Context;
+use anyhow::{Context, anyhow};
 use axum::{
     Json, Router,
     extract::{Path, Request, State},
@@ -63,15 +63,38 @@ pub async fn run(config: Config, shutdown_token: CancellationToken) -> anyhow::R
             "`app_src` must be provided either in your config file or as a CLI argument (neither was provided)"
         ))?);
         path.push("dist");
-        path.into_os_string()
+        let path = path
+            .into_os_string()
             .into_string()
-            .expect("could not convert `app_src` to str")
+            .expect("could not convert `app_src` to str");
+        if !std::fs::exists(&path)? {
+            return Err(anyhow!(
+                "app src directory `{}` does not exist. 
+                Did you remember to build your front end app?
+                Hint: you can build it by running:
+                polymenu {} --compile`",
+                &path,
+                &config
+                    .config
+                    .unwrap()
+                    .into_os_string()
+                    .into_string()
+                    .unwrap(),
+            ));
+        }
+        path
     };
     let url = config.server_url();
     let ui_service = get_service(ServeDir::new(&ui_src));
     let mut mounted = Router::new();
     for (key, path) in config.mounts.iter() {
         let expanded_path = expand_path(path).context("failed to expand mount path")?;
+        if !std::fs::exists(&expanded_path)? {
+            return Err(anyhow!(
+                "could not mount `{key}`: path `{}` does not exist",
+                &expanded_path
+            ));
+        }
         mounted = mounted.nest_service(
             &format!("/{key}"),
             get_service(ServeDir::new(expanded_path)),
