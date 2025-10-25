@@ -15,7 +15,7 @@
 
   let fusePromise = (async () => {
     // Get inputs from the CLI
-    const inputValues = await app.input<ItemData | string[]>();
+    const inputValues = await app.input<ItemData[] | string[][]>();
     // If they are not objects (e.g. if they are headless CSV rows),
     // assume the first item in each row is the key
     if (inputValues.length > 0 && Array.isArray(inputValues[0])) {
