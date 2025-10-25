@@ -18,8 +18,8 @@ importers:
         specifier: ^7.1.0
         version: 7.1.0
       polymenu:
-        specifier: link:../../../typescript
-        version: link:../../../typescript
+        specifier: link:../../../ts-client
+        version: link:../../../ts-client
       tailwindcss:
         specifier: ^4.1.11
         version: 4.1.11

@@ -18,15 +18,15 @@ jobs:
       - name: Detect package manager
         id: pm
         run: |
-          if [ -f typescript/pnpm-lock.yaml ]; then
+          if [ -f ts-client/pnpm-lock.yaml ]; then
             echo "manager=pnpm" >> "$GITHUB_OUTPUT"
-            echo "lock=typescript/pnpm-lock.yaml" >> "$GITHUB_OUTPUT"
-          elif [ -f typescript/yarn.lock ]; then
+            echo "lock=ts-client/pnpm-lock.yaml" >> "$GITHUB_OUTPUT"
+          elif [ -f ts-client/yarn.lock ]; then
             echo "manager=yarn" >> "$GITHUB_OUTPUT"
-            echo "lock=typescript/yarn.lock" >> "$GITHUB_OUTPUT"
-          elif [ -f typescript/package-lock.json ]; then
+            echo "lock=ts-client/yarn.lock" >> "$GITHUB_OUTPUT"
+          elif [ -f ts-client/package-lock.json ]; then
             echo "manager=npm" >> "$GITHUB_OUTPUT"
-            echo "lock=typescript/package-lock.json" >> "$GITHUB_OUTPUT"
+            echo "lock=ts-client/package-lock.json" >> "$GITHUB_OUTPUT"
           else
             echo "manager=none" >> "$GITHUB_OUTPUT"
             echo "lock=" >> "$GITHUB_OUTPUT"
@@ -89,7 +89,7 @@ jobs:
       - name: Upload tarball to this release (overwrite if exists)
         uses: softprops/action-gh-release@v2
         with:
-          files: typescript/${{ steps.pack.outputs.tgz }}
+          files: ts-client/${{ steps.pack.outputs.tgz }}
           overwrite_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
