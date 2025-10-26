@@ -5,7 +5,7 @@ with your selection to `STDOUT`.
 ## Installation
 Simply install the app's dependencies, and build it:
 ```sh
-pushd src && yarn build && popd
+pushd src && pnpm install && pnpm run build && popd
 ```
 
 ## Basic usage

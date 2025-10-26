@@ -229,11 +229,14 @@ fn default_dev_server_port() -> String {
 }
 
 fn default_develop_command() -> Vec<String> {
-    vec!["yarn", "dev"].into_iter().map(String::from).collect()
+    vec!["pnpm", "run", "dev"]
+        .into_iter()
+        .map(String::from)
+        .collect()
 }
 
 fn default_compile_command() -> Vec<String> {
-    vec!["yarn", "build"]
+    vec!["pnpm", "run", "build"]
         .into_iter()
         .map(String::from)
         .collect()
