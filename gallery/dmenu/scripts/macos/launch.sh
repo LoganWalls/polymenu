@@ -14,4 +14,4 @@ POLYMENU_GALLERY_APP_SRC="$SCRIPT_DIR/../../src" \
   polymenu --config "$SCRIPT_DIR/../../config.toml" \
   --mount "icons:$CACHE_DIR/icons" \
   --file "$INDEX" \
-  | xargs open -b
+  $@ | xargs open -b
