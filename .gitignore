@@ -3,5 +3,6 @@
 /target
 /result
 node_modules/
+**/.pnpm-store
 dist/
 *.tgz
