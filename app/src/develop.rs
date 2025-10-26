@@ -89,7 +89,7 @@ pub async fn ping_dev_server(url: String) -> Result<()> {
     Ok(())
 }
 
-pub async fn compile_app(command: &[String], app_src: &PathBuf) -> Result<()> {
+pub async fn run_command(command: &[String], app_src: &PathBuf) -> Result<()> {
     let mut child = tokio::process::Command::new(shell_expand(
         command
             .first()

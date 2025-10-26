@@ -86,10 +86,15 @@ pub struct Config {
     #[serde(default = "default_develop_command")]
     pub develop_command: Vec<String>,
 
-    /// The command to compile / build your app
+    /// The command to build your app
     #[clap(skip)]
-    #[serde(default = "default_compile_command")]
-    pub compile_command: Vec<String>,
+    #[serde(default = "default_build_command")]
+    pub build_command: Vec<String>,
+
+    /// The command to install your app's dependencies
+    #[clap(skip)]
+    #[serde(default = "default_install_command")]
+    pub install_command: Option<Vec<String>>,
 
     // Private properties
     #[arg(long = "option", action = ArgAction::Append, value_name = "KEY=VALUE")]
@@ -229,15 +234,21 @@ fn default_dev_server_port() -> String {
 }
 
 fn default_develop_command() -> Vec<String> {
-    vec!["pnpm", "run", "dev"]
+    vec!["pnpm", "dev"].into_iter().map(String::from).collect()
+}
+
+fn default_build_command() -> Vec<String> {
+    vec!["pnpm", "build"]
         .into_iter()
         .map(String::from)
         .collect()
 }
 
-fn default_compile_command() -> Vec<String> {
-    vec!["pnpm", "run", "build"]
-        .into_iter()
-        .map(String::from)
-        .collect()
+fn default_install_command() -> Option<Vec<String>> {
+    Some(
+        vec!["pnpm", "install"]
+            .into_iter()
+            .map(String::from)
+            .collect(),
+    )
 }

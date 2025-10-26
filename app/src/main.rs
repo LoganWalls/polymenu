@@ -1,5 +1,5 @@
 use self::config::{Config, UpdateFromOther};
-use self::develop::{compile_app, ping_dev_server, run_dev_server};
+use self::develop::{ping_dev_server, run_command, run_dev_server};
 use self::gui::{AppEvent, run_gui};
 use anyhow::{Context, Result, anyhow};
 use clap::Parser;
@@ -34,11 +34,16 @@ fn main() -> Result<()> {
         .context("failed to initialize tokio")?;
 
     if config.compile {
-        rt.block_on(compile_app(
-            &config.compile_command,
-            &config.src.expect("no `src` provided"),
-        ))
-        .context("failed to run compile command")?;
+        let src = config.src.as_ref().expect("no `src` provided");
+        if let Some(install_cmd) = config.install_command {
+            println!("Running install command: {install_cmd:?}");
+            rt.block_on(run_command(&install_cmd, src))
+                .context("failed to run install command")?;
+        }
+        println!();
+        println!("Running build command: {:?}", &config.build_command);
+        rt.block_on(run_command(&config.build_command, src))
+            .context("failed to run build command")?;
         return Ok(());
     }
 
