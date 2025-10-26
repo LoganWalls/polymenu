@@ -70,7 +70,7 @@ file = "~/path/to/foo.json"
 You can access the input from JS/TS:
 
 ```ts
-input: Promise<JsonValue[]> = app.input();
+input: Promise<JsonValue> = app.input();
 ```
 
 ### Calling CLI tools and scripts
