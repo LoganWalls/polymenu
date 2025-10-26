@@ -21,7 +21,8 @@
     "@tailwindcss/vite": "^4.1.11",
     "clsx": "^2.1.1",
     "fuse.js": "^7.1.0",
-    "polymenu": "link:../../../ts-client",
+    "polymenu": "../../../ts-client",
     "tailwindcss": "^4.1.11"
-  }
+  },
+  "packageManager": "yarn@4.10.3"
 }

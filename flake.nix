@@ -31,7 +31,10 @@
         toolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
         craneLib = (crane.mkLib pkgs).overrideToolchain toolchain;
         buildDeps = with pkgs; (
-          [nodePackages.pnpm nodejs]
+          [
+            yarn-berry
+            nodejs
+          ]
           ++ lib.optionals stdenv.isLinux [
             pkg-config
             mesa
