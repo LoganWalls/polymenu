@@ -101,9 +101,9 @@
             index={i}
             data={item}
             selected={selectedItems.includes(item)}
-            underCursor={i == cursorIndex}
             lastItem={i == itemsVisibleAtMaxHeight - 1}
             bind:selectedItems
+            bind:cursorIndex
           />
         {/each}
       </div>

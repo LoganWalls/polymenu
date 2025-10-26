@@ -5,21 +5,23 @@
   import * as util from "polymenu/util";
   import FallbackIcon from "./FallbackIcon.svelte";
 
-  const {
+  let {
+    index,
     data,
     selected,
-    underCursor,
     lastItem,
     selectedItems = $bindable(),
+    cursorIndex = $bindable(),
   }: {
     index: number;
     data: ItemData;
     selected: boolean;
-    underCursor: boolean;
     lastItem: boolean;
     selectedItems: ItemData[];
+    cursorIndex: number;
   } = $props();
   let imageMissing = $state(false);
+  let underCursor = $derived(index == cursorIndex);
 </script>
 
 <!-- svelte-ignore a11y_mouse_events_have_key_events -->
@@ -31,6 +33,9 @@
     selected ? "border-blue-500/50" : "border-transparent",
     underCursor && lastItem && "rounded-b-xl",
   )}
+  onmouseover={() => {
+    cursorIndex = index;
+  }}
   onclick={(e) => {
     if (e.shiftKey) {
       util.toggleSet(data, selectedItems);
