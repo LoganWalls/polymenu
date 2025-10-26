@@ -18,10 +18,10 @@
     "vite": "^7.0.0"
   },
   "dependencies": {
+    "@polymenu/client": "jsr:^0.1.0",
     "@tailwindcss/vite": "^4.1.11",
     "clsx": "^2.1.1",
     "fuse.js": "^7.1.0",
-    "polymenu": "link:../../../ts-client",
     "tailwindcss": "^4.1.11"
   }
 }

@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@polymenu/client':
+        specifier: jsr:^0.1.0
+        version: '@jsr/polymenu__client@0.1.0'
       '@tailwindcss/vite':
         specifier: ^4.1.11
         version: 4.1.11(vite@7.0.0(jiti@2.4.2)(lightningcss@1.30.1))
@@ -17,9 +20,6 @@ importers:
       fuse.js:
         specifier: ^7.1.0
         version: 7.1.0
-      polymenu:
-        specifier: link:../../../ts-client
-        version: link:../../../ts-client
       tailwindcss:
         specifier: ^4.1.11
         version: 4.1.11
@@ -223,6 +223,9 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.25':
     resolution: {integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==}
+
+  '@jsr/polymenu__client@0.1.0':
+    resolution: {integrity: sha512-R2ZW15RzpkyLvMenIh2eCgOxqxfN9d0MQR8f/O0ahX03YOGmlXyWJ7Z0VWhBTTQlbp4lHfFhs8cnY+kzZKVy0Q==, tarball: https://npm.jsr.io/~/11/@jsr/polymenu__client/0.1.0.tgz}
 
   '@rollup/rollup-android-arm-eabi@4.44.1':
     resolution: {integrity: sha512-JAcBr1+fgqx20m7Fwe1DxPUl/hPkee6jA6Pl7n1v2EFiktAHenTaXl5aIFjUIEsfn9w3HE4gK1lEgNGMzBDs1w==}
@@ -841,6 +844,8 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
+
+  '@jsr/polymenu__client@0.1.0': {}
 
   '@rollup/rollup-android-arm-eabi@4.44.1':
     optional: true

@@ -2,7 +2,7 @@
   import clsx from "clsx/lite";
   import type { ItemData } from "../common";
   import { submit } from "../common";
-  import * as util from "polymenu/util";
+  import * as util from "@polymenu/client/util";
   import FallbackIcon from "./FallbackIcon.svelte";
 
   let {

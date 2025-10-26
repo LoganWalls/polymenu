@@ -67,10 +67,13 @@ file = "~/path/to/foo.json"
 # format = "json" # You can also specify an input format, but polymenu will infer it from the file's extension by default
 ```
 
-You can access the input from JS/TS:
+You can access the input from JS/TS using the [client library](https://jsr.io/@polymenu/client):
 
 ```ts
-input: Promise<JsonValue> = app.input();
+import { App } from "@polymenu/client";
+
+const app: App = await App.fromFetchedOptions();
+const input: Promise<JsonValue> = app.input();
 ```
 
 ### Calling CLI tools and scripts
