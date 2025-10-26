@@ -2,16 +2,18 @@ This app is a `dmenu` -like interface that allows you to fuzzy-find through a li
 of inputs, select one or more of those inputs, and then prints values associated
 with your selection to `STDOUT`.
 
+**All example commands assume you are in the same directory as this README.**
+
 ## Installation
-Simply install the app's dependencies, and build it:
+Compile the app using polymenu:
 ```sh
-pushd src && pnpm install && pnpm run build && popd
+polymenu --config ./config.toml --src ./src --compile
 ```
 
 ## Basic usage
 
 ```sh
-"Hello\nFriend" | polymenu --config ./config.toml
+"Hello\nFriend" | polymenu --config ./config.toml --src ./src
 ```
 
 For structured inputs, each input should have the following spec:

@@ -78,6 +78,8 @@
             [
               toolchain
               svelte-language-server
+              nushell
+              fd
             ]
             ++ buildDeps;
           RUST_SRC_PATH = "${toolchain}/lib/rustlib/src/rust/library";
